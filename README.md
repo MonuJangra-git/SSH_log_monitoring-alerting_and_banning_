@@ -1,6 +1,6 @@
-# SSH Log Monitoring & Alerting
+# log_monitoring,alerting_and_banning
 
-This repository contains a GitHub-ready copy of the `log_monitring_and_alerting.py` script for real-time SSH authentication log monitoring, automatic threat logging, firewall blocking, and email alerts.
+This repository contains a GitHub-ready copy of the `log_monitring_and_alerting.py` script for real-time SSH log monitoring, alerting, and banning. for real-time SSH authentication log monitoring, automatic threat logging, firewall blocking, and email alerts.
 
 > Note: The script in this repository uses environment variables for email credentials so your real Gmail addresses are hidden from GitHub. The original project folder remains unchanged.
 
@@ -35,7 +35,7 @@ This repository contains a GitHub-ready copy of the `log_monitring_and_alerting.
 
 ## Recommended GitHub upload
 
-- Repository name: `ssh-log-monitoring-alert`
+- Repository name: `log_monitoring,alerting_and_banning`
 - Only tracked files: `log_monitring_and_alerting.py` and `README.md`
 - Keep all real credentials out of source control
 
@@ -51,4 +51,4 @@ This repository contains a GitHub-ready copy of the `log_monitring_and_alerting.
 ## Notes
 
 - The original project folder still contains your current script and settings.
-- This repo copy is designed to be safe for GitHub by using placeholder credentials.
+- This repo copy is designed to be safe for GitHub by using placeholder credentials and environment-based email configuration.
