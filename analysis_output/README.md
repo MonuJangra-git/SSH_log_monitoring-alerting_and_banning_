@@ -29,6 +29,26 @@ Including this screenshot validates the backend execution of the security module
 This screenshot shows a terminal listing multiple private IP addresses (192.168.x.x, 172.16.x.x) detected during monitoring.  
 The background includes the project workspace in VS Code, confirming integration with the “BLACKHACK” project files.  
 This serves as proof of active network scanning and monitoring, validating the system’s ability to track connected devices in a cybersecurity context.
+# Screenshot Overview: Attack Type Visualization
+
+<img width="850" height="615" alt="Visualising_log_file_using_matplotlib" src="https://github.com/user-attachments/assets/7a439067-4fa8-4144-830d-6ebc351a9f56" />
+
+**Explanation:**
+This screenshot presents a bar chart generated from `threat_ip.json`, showing counts of different attack types.  
+The chart compares **brute_force (50)**, **lockout (56)**, **pam_failure (48)**, and **other_failed (0)** attempts.  
+By visualizing the data, it highlights that lockout attacks were the most frequent, providing a clear statistical overview of intrusion attempts.
+
+
+# Screenshot Overview: Threat Detection Log (Detailed)
+
+<img width="1111" height="689" alt="logs-scoorecard-in-scorecard-format" src="https://github.com/user-attachments/assets/72c1f330-6a18-4fe0-8b94-4474e0dc6072" />
+
+
+**Explanation:**
+This screenshot displays the `threat_ip.log` file with categorized intrusion attempts.  
+It summarizes failed SSH login attempts under **BRUTE_FORCE**, **LOCKOUT**, and **PAM_FAILURE**, with timestamps and IP addresses.  
+The log confirms a total of **154 attacks detected**, serving as detailed proof of the system’s monitoring and detection capabilities.  
+This evidence demonstrates how the system records unauthorized access attempts for forensic and security analysis.
 
 
 # Screenshot Overview: Firewall Rule Updates Log
@@ -60,23 +80,3 @@ These entries confirm that the firewall is actively blocking malicious or unauth
 This screenshot presents the contents of the `threat_ip.log` file, summarizing detected attacks under categories like **BRUTE_FORCE**, **LOCKOUT**, and **PAM_FAILURE**.  
 Each section includes timestamps, IP addresses, and authentication failure messages, providing detailed insight into intrusion attempts.  
 This serves as proof of the system’s real-time threat monitoring and logging capabilities, showcasing its ability to detect and categorize unauthorized access attempts.
-# Screenshot Overview: Attack Type Visualization
-
-<img width="850" height="615" alt="Visualising_log_file_using_matplotlib" src="https://github.com/user-attachments/assets/7a439067-4fa8-4144-830d-6ebc351a9f56" />
-
-**Explanation:**
-This screenshot presents a bar chart generated from `threat_ip.json`, showing counts of different attack types.  
-The chart compares **brute_force (50)**, **lockout (56)**, **pam_failure (48)**, and **other_failed (0)** attempts.  
-By visualizing the data, it highlights that lockout attacks were the most frequent, providing a clear statistical overview of intrusion attempts.
-
-
-# Screenshot Overview: Threat Detection Log (Detailed)
-
-<img width="1111" height="689" alt="logs-scoorecard-in-scorecard-format" src="https://github.com/user-attachments/assets/72c1f330-6a18-4fe0-8b94-4474e0dc6072" />
-
-
-**Explanation:**
-This screenshot displays the `threat_ip.log` file with categorized intrusion attempts.  
-It summarizes failed SSH login attempts under **BRUTE_FORCE**, **LOCKOUT**, and **PAM_FAILURE**, with timestamps and IP addresses.  
-The log confirms a total of **154 attacks detected**, serving as detailed proof of the system’s monitoring and detection capabilities.  
-This evidence demonstrates how the system records unauthorized access attempts for forensic and security analysis.
