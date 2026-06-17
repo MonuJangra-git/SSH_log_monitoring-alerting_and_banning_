@@ -59,33 +59,33 @@ case "$1" in
             echo "ℹ️  firewall_auto_ip_blocker.py not running."
         fi
 
-        echo "👋 Thanks for using SSH Monitor!"
+        echo "👋 Thanks for using MJ-IPguard!"
         ;;
 
     restart)
-        echo "🔄 SSH Monitor is restarting..."
+        echo "🔄 Log Monitor is restarting..."
         $0 stop
         sleep 2
         $0 start
         ;;
 
     status)
-        echo "📊 Checking service status..."
+        echo " Checking service status..."
         pgrep -f main.py > /dev/null && echo "✓ main.py is running." || echo "✗ main.py is NOT running."
         pgrep -f firewall_auto_ip_blocker.py > /dev/null && echo "✓ firewall_auto_ip_blocker.py is running." || echo "✗ firewall_auto_ip_blocker.py is NOT running."
         ;;
     view)
-        echo "📈 Starting threat visualization..."
+        echo " Starting threat visualization..."
         python3 visualize_threats.py
         ;;
 
     logs)
-        echo "📋 Main service logs:"
+        echo " Main service logs:"
         tail -f analysis_output/main.log
         ;;
 
     firewall-logs)
-        echo "🔥 Firewall action logs:"
+        echo " Firewall action logs:"
         tail -f analysis_output/firewall_rules.log
         ;;
 
@@ -95,7 +95,7 @@ case "$1" in
         ;;
 
     *)
-        echo "SSH Log Monitor - Control Script"
+        echo "MJ-IPguard - Control Script"
         echo ""
         echo "Usage: sudo bash init.sh {command}"
         echo ""
