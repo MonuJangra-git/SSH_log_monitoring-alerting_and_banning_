@@ -35,7 +35,7 @@ case "$1" in
         fi
 
         echo "======================================"
-        echo "🛡️  SSH Monitor is active!"
+        echo "🛡️  MJ-IPguard is active!"
         echo "Do your work without distraction"
         echo "======================================"
         ;;
@@ -63,7 +63,7 @@ case "$1" in
         ;;
 
     restart)
-        echo "🔄 Log Monitor is restarting..."
+        echo "🔄 IPguard is restarting..."
         $0 stop
         sleep 2
         $0 start
@@ -94,22 +94,6 @@ case "$1" in
         tail -20 analysis_output/threat_ip.log
         ;;
 
-    *)
-        echo "MJ-IPguard - Control Script"
-        echo ""
-        echo "Usage: sudo bash init.sh {command}"
-        echo ""
-        echo "Commands:"
-        echo "  start            - Start SSH monitoring and firewall blocker"
-        echo "  stop             - Stop all services"
-        echo "  restart          - Restart services"
-        echo "  status           - Check service status"
-        echo "  view             - Launch threat visualization"
-        echo "  logs             - View main service logs"
-        echo "  firewall-logs    - View firewall action logs"
-        echo "  threats          - View recent threats"
-        echo ""
-        ;;
 esac
 
 echo "======================================"
