@@ -155,7 +155,61 @@ Ideal for system administrators managing Linux servers who need instant visibili
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Directory Structure
+
+### Project Directory Layout
+
+```
+log_monitoring-alerting_and_banning/
+├── 📄 README.md ........................ Project documentation
+├── 📄 .env.example ..................... Configuration template
+├── 📄 .gitignore ....................... Git exclude rules
+├── 📄 requirements.txt ................. Python dependencies
+│
+├── 🐍 Python Core Modules
+│   ├── main.py ......................... Entry point, reads env vars
+│   ├── log_analyser.py ................. SSH log pattern matching engine
+│   ├── email_handler.py ................ SMTP email alerting system
+│   ├── file_handler.py ................. Output file writing
+│   ├── firewall_auto_ip_blocker.py ..... Automatic IP blocking daemon
+│   └── visualize_threats.py ............ Real-time threat visualization
+│
+├── 📜 Shell Scripts
+│   ├── init.sh ......................... Service control (start/stop/status)
+│   └── run.sh .......................... User-friendly wrapper for init.sh
+│
+├── 📁 working/ (All Executable Files)
+│   ├── main.py ......................... [Copy of main entry point]
+│   ├── log_analyser.py ................. [Copy of analyzer]
+│   ├── email_handler.py ................ [Copy of email handler]
+│   ├── file_handler.py ................. [Copy of file handler]
+│   ├── firewall_auto_ip_blocker.py ..... [Copy of firewall blocker]
+│   ├── visualize_threats.py ............ [Copy of visualizer]
+│   ├── init.sh ......................... [Copy of init script]
+│   ├── run.sh .......................... [Copy of run script]
+│   └── .env.example .................... [Copy of env template]
+│
+├── 📁 analysis_output/ (Runtime Generated)
+│   ├── threat_ip.log ................... Detected threats (human-readable)
+│   ├── threat_ip.json .................. Detected threats (JSON format)
+│   ├── ips_detected.txt ................ IP list for automation
+│   ├── firewall_rules.log .............. Firewall action audit trail
+│   ├── output.log ...................... Application activity log
+│   ├── main.pid ........................ Main process ID (when running)
+│   ├── firewall.pid .................... Firewall blocker process ID
+│   └── main.log ........................ Main process output logs
+│
+├── 📁 support_files/ (Legacy & Helpers)
+│   ├── README.md ....................... Helper documentation
+│   ├── legacy_log_monitoring_and_alerting.py [Old version]
+│   ├── firewall-auto-setup.py .......... Firewall initialization
+│   ├── cli_interface.sh ................ Command-line interface
+│   └── runner.sh ....................... Additional automation script
+│
+└── 📁 .git/ ............................ Git repository metadata
+```
+
+### System Data Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -190,14 +244,19 @@ Ideal for system administrators managing Linux servers who need instant visibili
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
 
-OUTPUT FILES:
-  analysis_output/
-    ├── threat_ip.log ........... Threats (human-readable)
-    ├── threat_ip.json ......... Threats (machine-readable)
-    ├── ips_detected.txt ........ IP list for automation
-    ├── firewall_rules.log ...... Firewall audit trail
-    ├── output.log ............. Application log
-    └── README.md .............. This documentation
+SHELL SCRIPT EXECUTION FLOW:
+  run.sh (user-friendly)
+    └─▶ init.sh (service control)
+         ├─▶ Start main.py (monitoring)
+         ├─▶ Start firewall_auto_ip_blocker.py (blocking)
+         └─▶ Optional: python visualize_threats.py (charts)
+
+FILES EXECUTION ORDER:
+  1. run.sh ........................ Entry point (user friendly)
+  2. init.sh ....................... Service manager
+  3. main.py ....................... Log monitoring (from working/)
+  4. firewall_auto_ip_blocker.py ... IP blocking (from working/)
+  5. visualize_threats.py .......... Visualization (from working/)
 ```
 
 ---
@@ -214,18 +273,34 @@ cd log_monitoring-alerting_and_banning
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Create .env file
+# 3. Create .env file from template
 cp .env.example .env
 nano .env  # Edit with your Gmail credentials
 
-# 4. Run the monitor
-python main.py
+# 4. Start the monitor using the shell script (RECOMMENDED)
+sudo bash run.sh start
 
-# 5. (Optional) In another terminal, visualize threats:
+# 5. Check status
+bash run.sh status
+
+# 6. View real-time logs
+bash run.sh logs
+
+# 7. Launch threat visualization
+bash run.sh view
+```
+
+### Alternative: Run Python Files Directly
+
+```bash
+# Terminal 1: Start main monitor
+sudo python main.py
+
+# Terminal 2: Start firewall blocker
+sudo python firewall_auto_ip_blocker.py
+
+# Terminal 3: Launch visualization
 python visualize_threats.py
-
-# 6. (Optional) In another terminal, run firewall blocker:
-python firewall_auto_ip_blocker.py
 ```
 
 ---
@@ -323,21 +398,124 @@ THREAT_THRESHOLD=500  # Send email alert when attacks exceed this count
 
 ## 📊 Usage Commands
 
+### Shell Script Method (Recommended - All-in-One)
+
+```bash
+# Start both monitoring and firewall blocker
+sudo bash run.sh start
+
+# Stop services
+sudo bash run.sh stop
+
+# Restart services
+sudo bash run.sh restart
+
+# Check service status
+bash run.sh status
+
+# View main application logs (live)
+bash run.sh logs
+
+# View firewall action logs (live)
+bash run.sh firewall-logs
+
+# View recent threats
+bash run.sh threats
+
+# Launch threat visualization
+bash run.sh view
+```
+
+### Direct Script Execution (init.sh)
+
+For more control, use `init.sh` directly:
+
+```bash
+# All-in-one startup
+sudo bash init.sh start
+
+# Shutdown
+sudo bash init.sh stop
+
+# Restart everything
+sudo bash init.sh restart
+
+# Check running services
+bash init.sh status
+
+# View real-time logs
+bash init.sh logs
+
+# View firewall logs
+bash init.sh firewall-logs
+
+# See recent threats
+bash init.sh threats
+
+# Launch visualization
+bash init.sh view
+```
+
+### Available Working Directory
+
+All executable files are organized in the `working/` directory for easy access:
+
+```
+working/
+├── main.py .......................... Main monitoring entry point
+├── log_analyser.py .................. SSH log pattern matching
+├── email_handler.py ................. Email alert system
+├── file_handler.py .................. Output file management
+├── firewall_auto_ip_blocker.py ...... Automatic IP blocking
+├── visualize_threats.py ............. Real-time threat charts
+├── init.sh .......................... Service control script
+├── run.sh ........................... User-friendly wrapper
+└── .env.example ..................... Configuration template
+```
+
+### Quick Commands Reference
+
+```bash
+# Enter working directory
+cd working/
+
+# Start monitoring from any directory
+sudo bash run.sh start
+
+# Full system info
+bash run.sh status
+
+# View what IPs got blocked
+bash run.sh firewall-logs
+
+# See attack patterns
+bash run.sh threats
+
+# Interactive visualization
+bash run.sh view
+
+# Stop when done
+sudo bash run.sh stop
+```
+
 ### 1. Start Real-Time Monitoring
 ```bash
-# Basic monitoring (requires sudo for firewall integration)
+# Using shell script (recommended)
+sudo bash run.sh start
+
+# Or direct Python
 sudo python main.py
 
 # Run in background with nohup
 nohup sudo python main.py > analysis_output/monitor.log 2>&1 &
-
-# Run with specific log file
-LOG_FILE_PATH=/var/log/secure python main.py
 ```
 
 ### 2. Start Firewall Auto-Blocker
 ```bash
-# Monitor detected IPs and block them automatically
+# Using shell script
+sudo bash run.sh start  # Starts both monitor and blocker
+
+# Or direct Python
 sudo python firewall_auto_ip_blocker.py
 
 # Run in background
@@ -346,7 +524,10 @@ nohup sudo python firewall_auto_ip_blocker.py > analysis_output/firewall.log 2>&
 
 ### 3. Visualize Threats in Real-Time
 ```bash
-# Launch matplotlib dashboard
+# Using shell script
+bash run.sh view
+
+# Or direct Python
 python visualize_threats.py
 
 # Displays live updating charts:
@@ -359,10 +540,10 @@ python visualize_threats.py
 ### 4. Monitor Logs in Real-Time
 ```bash
 # Watch main application output
-tail -f analysis_output/output.log
+bash run.sh logs
 
 # Watch firewall actions
-tail -f analysis_output/firewall_rules.log
+bash run.sh firewall-logs
 
 # Watch all detected IPs
 tail -f analysis_output/ips_detected.txt
@@ -402,7 +583,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/path/to/log_monitoring-alerting_and_banning
-ExecStart=/usr/bin/python3 /path/to/main.py
+ExecStart=/usr/bin/bash /path/to/run.sh start
 Restart=on-failure
 RestartSec=10
 
@@ -420,17 +601,17 @@ sudo systemctl status ssh-monitor.service
 
 #### Run Multiple Instances
 ```bash
-# Terminal 1: Main monitor
-sudo python main.py
+# Terminal 1: Start services via shell script
+sudo bash run.sh start
 
-# Terminal 2: Firewall blocker
-sudo python firewall_auto_ip_blocker.py
+# Terminal 2: View logs
+bash run.sh logs
 
-# Terminal 3: Visualization
-python visualize_threats.py
+# Terminal 3: View threats
+bash run.sh threats
 
-# Terminal 4: Live monitoring
-tail -f analysis_output/output.log
+# Terminal 4: Launch visualization
+bash run.sh view
 ```
 
 ---
