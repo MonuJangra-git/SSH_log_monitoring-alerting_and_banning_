@@ -81,3 +81,8 @@ These entries confirm that the firewall is actively blocking malicious or unauth
 This screenshot presents the contents of the `threat_ip.log` file, summarizing detected attacks under categories like **BRUTE_FORCE**, **LOCKOUT**, and **PAM_FAILURE**.  
 Each section includes timestamps, IP addresses, and authentication failure messages, providing detailed insight into intrusion attempts.  
 This serves as proof of the system’s real-time threat monitoring and logging capabilities, showcasing its ability to detect and categorize unauthorized access attempts.
+
+# Conclusion
+
+These screenshots collectively demonstrate the **deployment, monitoring, and security enforcement** features of the Firewall Management & Threat Detection System.  
+They provide verifiable proof of functionality, making the project transparent and reliable for presentation, audits, or client review.
