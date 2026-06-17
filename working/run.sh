@@ -31,7 +31,7 @@ case "$1" in
     bash init.sh threats
     ;;
   *)
-    echo "🛡️ Log Monitor Control Script"
+    echo "🛡️ MJ-IPguard Control Script"
     echo ""
     echo "Usage: bash run.sh {command}"
     echo ""
