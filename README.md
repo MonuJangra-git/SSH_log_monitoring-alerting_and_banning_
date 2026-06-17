@@ -1,4 +1,4 @@
-# 🔐 SSH Log Monitoring & Alerting System - v1.5
+# 🔐 Log Monitoring & Alerting System - v1.5
 
 > **Enterprise-Grade SSH Attack Detection & Automated Response**  
 > Real-time threat detection, automated firewall blocking, and intelligent alerting without external dependencies
@@ -28,16 +28,18 @@
 
 ## Overview
 
-**SSH Log Monitoring & Alerting System** is a lightweight yet powerful Python-based security tool designed to:
+** Log Monitoring & Alerting System** is a lightweight yet powerful Python-based security tool designed to:
 
-- **Monitor** SSH authentication logs in real-time
+- **Monitor** Log authentication logs in real-time
 - **Detect** sophisticated brute-force attacks, lockout attempts, and PAM failures
 - **Alert** via email on suspicious activity (configurable thresholds)
 - **Block** attacking IPs automatically using firewalld
 - **Analyze** threats with built-in JSON reporting (no Splunk/ELK needed!)
 - **Visualize** attack patterns with live matplotlib charts
+- **Firewall-auto-setup** Auto-setup firewall before stating for blocking ip
+- **Lightweight** This project is very light weight and very fast 
 
-Ideal for system administrators managing Linux servers who need instant visibility into SSH attack patterns without expensive SIEM infrastructure.
+Ideal for system administrators managing Linux servers who need instant visibility into SSH and other attack patterns without expensive SIEM infrastructure.
 
 ---
 
@@ -77,6 +79,7 @@ Ideal for system administrators managing Linux servers who need instant visibili
   - 3-second polling interval for new threats
 
 - **Persistent IP Blocking:**
+- **automatically bock suspsious ips **
   ```bash
   firewall-cmd --add-rich-rule 'rule family="ipv4" source address="192.168.x.x" drop'
   ```
@@ -172,8 +175,9 @@ log_monitoring-alerting_and_banning/
 │   ├── email_handler.py ................ SMTP email alerting system
 │   ├── file_handler.py ................. Output file writing
 │   ├── firewall_auto_ip_blocker.py ..... Automatic IP blocking daemon
-│   └── visualize_threats.py ............ Real-time threat visualization
-│
+|   └── visualize_threats.py ............ Real-time threat visualization
+|   └── firewall-auto-setup.py ............ automatically-firewall-setup
+│   
 ├── 📜 Shell Scripts
 │   ├── init.sh ......................... Service control (start/stop/status)
 │   └── run.sh .......................... User-friendly wrapper for init.sh
@@ -231,8 +235,9 @@ log_monitoring-alerting_and_banning/
 │                               │       └─────────────────┘   │
 │                               │                              │
 │                               ├─────▶ ┌─────────────────┐   │
-│                               │       │email_handler.py │   │
-│                               │       │ SMTP Alert      │   │
+│                               │       │email_handler.py  │   │
+│                               │       │ SMTP Alert       |   |
+|                               │       │ and mutt Alert   |   |
 │                               │       │ (threshold-based)│   │
 │                               │       └─────────────────┘   │
 │                               │                              │
@@ -275,7 +280,7 @@ pip install -r requirements.txt
 
 # 3. Create .env file from template
 cp .env.example .env
-nano .env  # Edit with your Gmail credentials
+nano .env  # Edit with your Gmail credentials  or if client already have mutt mail system then no need to any mail setup
 
 # 4. Start the monitor using the shell script (RECOMMENDED)
 sudo bash run.sh start
@@ -372,7 +377,7 @@ ALERT_EMAIL_RECIPIENT=alert_recipient@example.com
 LOG_FILE_PATH=/var/log/auth.log  # Path to SSH auth log
 
 # Alert Threshold
-THREAT_THRESHOLD=500  # Send email alert when attacks exceed this count
+THREAT_THRESHOLD=500  # Send email alert when attacks exceed this count client can change according to his comfort
 ```
 
 ### Gmail Setup (Required for Email Alerts)
@@ -669,10 +674,11 @@ Recent Brute Force Attacks:
 ```
 
 **Why JSON?** Parse directly with Python/bash/any language. No need for:
+- ✅ Just native tools!
+- ✅ FREE OF COST NO NEED TO PAY ANYMORE
 - ❌ Splunk licenses ($$$)
 - ❌ ELK Stack complexity
 - ❌ Datadog subscriptions
-- ✅ Just native tools!
 
 #### 3. `ips_detected.txt` (IP List for Automation)
 ```
@@ -876,8 +882,8 @@ echo $ALERT_EMAIL_PASSWORD
 # 4. Test SMTP connection directly
 python -c "
 import smtplib
-sender = 'your_email@gmail.com'
-key = 'your_app_password'
+sender = 'client_email@gmail.com'
+key = 'client_app_password'
 try:
     with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
         server.starttls()
@@ -890,7 +896,7 @@ except Exception as e:
 
 ### Issue: Firewall Rules Not Applied
 
-**Symptoms:** IPs detected but not blocked
+**Symptoms:** IPs detected but not blocked (almost very low chance but I guide you for every possible situation so don't worry  )
 
 **Solutions:**
 ```bash
@@ -956,60 +962,7 @@ sudo nice -n 15 python main.py
 
 ---
 
-## 🗺️ Future Roadmap
 
-### Version 1.6 (Q3 2024)
-- [ ] **Machine Learning Anomaly Detection**
-  - Baseline normal SSH patterns
-  - Detect unusual IPs/times/usernames
-  - Zero-day attack detection
-
-- [ ] **Geo-IP Integration**
-  - Flag attacks from unusual countries
-  - Country-based blocking rules
-  - Whitelist trusted regions
-
-- [ ] **Performance Optimizations**
-  - Database backend (SQLite) for large datasets
-  - Distributed processing for multi-server setups
-  - Caching layer for repeated IPs
-
-### Version 1.7 (Q4 2024)
-- [ ] **Advanced Reporting**
-  - HTML report generation
-  - PDF exports with charts
-  - Weekly/monthly summaries
-
-- [ ] **Integration Plugins**
-  - Slack/Teams webhooks
-  - PagerDuty incident creation
-  - SIEM integrations (Splunk, ELK via API)
-
-- [ ] **Web Dashboard**
-  - Flask-based UI
-  - Real-time threat map
-  - Attack timeline visualization
-
-### Version 2.0 (Q1 2025)
-- [ ] **Multi-Server Support**
-  - Central monitoring server
-  - Distributed agent architecture
-  - Cross-server threat correlation
-
-- [ ] **Advanced Blocking**
-  - Rate-limiting instead of full block
-  - Temporary bans with expiration
-  - Conditional rules based on time
-
-- [ ] **Threat Intelligence**
-  - IP reputation scoring
-  - Known botnet detection
-  - Automated threat feeds
-
-- [ ] **User Management**
-  - Role-based configuration access
-  - Audit logs for all changes
-  - Multi-user support
 
 ### Requested Features (Community)
 - 🔄 Windows event log support (PowerShell integration)
@@ -1044,18 +997,18 @@ MIT License - See LICENSE file for details
 
 ---
 
-## 📞 Support & Contact
+##  Support & Contact
 
 - **Issues:** GitHub Issues page
-- **Email:** monujangra@example.com
-- **LinkedIn:** [Profile Link]
+- **Email:** monujangraji10@example.com
+- **LinkedIn:** linkedin.com/in/monu-jangra-8b343437a
 - **Documentation:** This README
 
 ---
 
 ## ⭐ Show Your Support
 
-If this project helped you secure your servers, please:
+If this project helped you to secure your servers, please:
 - ⭐ Star this repository
 - 📢 Share with your DevOps/SysAdmin friends
 - 💬 Leave feedback and suggestions
@@ -1063,4 +1016,4 @@ If this project helped you secure your servers, please:
 
 ---
 
-**Stay Secure! 🛡️**
+**Stay Updated ,Stay Secured 🛡️**
