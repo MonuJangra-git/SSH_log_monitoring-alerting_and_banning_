@@ -1,5 +1,5 @@
 #!/bin/bash
-# SSH Log Monitor - Helper Script
+# Log Monitor - Helper Script
 # Wrapper for init.sh to simplify command execution
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -31,12 +31,12 @@ case "$1" in
     bash init.sh threats
     ;;
   *)
-    echo "🛡️  SSH Log Monitor Control Script"
+    echo "🛡️ Log Monitor Control Script"
     echo ""
     echo "Usage: bash run.sh {command}"
     echo ""
     echo "Commands:"
-    echo "  start           - Start SSH monitoring and firewall blocker"
+    echo "  start           - Start Log monitoring and firewall blocker"
     echo "  stop            - Stop all services"
     echo "  restart         - Restart services"
     echo "  status          - Check service status"
