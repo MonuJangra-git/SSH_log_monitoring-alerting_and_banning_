@@ -1,11 +1,11 @@
-# 🔐 Log Monitoring & Alerting System - v1.5
+# 🔐 Log Monitoring Alerting System & Banning System - v1.5
 
 > **Enterprise-Grade SSH Attack Detection & Automated Response**  
 > Real-time threat detection, automated firewall blocking, and intelligent alerting without external dependencies
 
 ---
 
-## 📋 Table of Contents
+## 📋 Table of Contents of MJ-IPguard
 
 - [Overview](#overview)
 - [🎯 Key Features](#key-features)
