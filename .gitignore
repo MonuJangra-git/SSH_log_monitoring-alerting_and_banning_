@@ -1,4 +1,7 @@
+[*.pyc]
 __pycache__/
-*.pyc
 .env
+.venv/
+*.swp
+*.pid
 .DS_Store
