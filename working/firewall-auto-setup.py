@@ -1,4 +1,5 @@
 import subprocess
+import sys
 print("welcome to firewall management system v2.0 \n you can set rules and manage your firewall using this interface ")
 def log_file(write_data:str):
     with open("firewall_rules.log","a") as file:
@@ -39,7 +40,8 @@ def firewall_check():
             print("firewalld is not installed , use sudo apt install firewalld -y and make sure internet work properly  ")
             return 0
     else :
-        print("there are some issue in checking the firewall")
+        print("there are some issue in checking the firewall, use need to install firewall 1st using \n 'sudo apt install firewalld' or \n 'sudo yum install firewalld'")
+        sys.exit("please use command , this is not big issue  ")
 def firewall_deploy():
     if firewall_check() ==1:
         cmd=["systemctl","enable","firewalld"]
