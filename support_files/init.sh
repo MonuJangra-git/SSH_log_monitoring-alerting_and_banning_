@@ -8,9 +8,18 @@ if [[ ${root} != 0 ]]; then
     exit 
 fi
 
+FOLDER_NAME="analysis_output"
 
+# Check if folder exists
+if [ ! -d "$FOLDER_NAME" ]; then
+    echo "Folder '$FOLDER_NAME' not found. Creating..."
+    mkdir "$FOLDER_NAME"
+else
+    echo "Folder '$FOLDER_NAME' already exists."
+fi
 case "$1" in
     start)
+        
         echo "🔍 Checking firewall status..."
         # ensure we run the setup script from this directory
         python3 ./firewall-auto-setup.py || true
