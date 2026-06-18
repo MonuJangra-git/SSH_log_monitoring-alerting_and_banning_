@@ -7,7 +7,7 @@ if [[ ${root} != 0 ]]; then
     echo "Exiting..............."
     exit 
 fi
-#!/bin/bash
+
 
 # Check if firewalld is installed
 if ! command -v firewalld &> /dev/null; then
