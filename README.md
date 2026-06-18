@@ -63,9 +63,10 @@ Ideal for system administrators managing Linux servers who need instant visibili
 
 ### 📧 Intelligent Email Alerting
 - Configurable alert thresholds (default: 500 failed attempts)
-- Real-time SMTP delivery to Gmail/custom mail servers
-- Automatic credential validation (won't send if unconfigured)
-- HTML/text message support
+- **Dual delivery method** — tries mutt first, falls back to SMTP automatically
+- `mutt.sh` — sends `threat_ip.log` as both email body and attachment via mutt
+- SMTP delivery to Gmail as fallback if mutt is unavailable
+- Credentials loaded from `.env` file (no hardcoding)
 - Graceful error handling with detailed logging
 
 ### 🔥 Automated Firewall Integration
@@ -122,7 +123,7 @@ Ideal for system administrators managing Linux servers who need instant visibili
 
 ### 1. **Zero External Dependencies for Analysis**
 - ✅ Built-in JSON parsing and analysis
-- ✅ No need for Splunk, ELK, Datadog, or other expensive SIEM solutions , live visualisation is provided 
+- ✅ No need for Splunk, ELK, Datadog, or other expensive SIEM solutions
 - ✅ Generate production-grade reports from threat_ip.json directly
 - ✅ Custom analysis scripts can easily consume JSON output
 
@@ -180,7 +181,8 @@ SSH_log_monitoring-alerting_and_banning/
 │   │
 │   ├── 📜 Shell Scripts
 │   │   ├── init.sh ..................... Service control (start/stop/restart/status)
-│   │   └── run.sh ...................... User-friendly wrapper for init.sh
+│   │   ├── run.sh ...................... User-friendly wrapper for init.sh
+│   │   └── mutt.sh ..................... Sends threat_ip.log alert via mutt
 │   │
 │   └── 📄 .env.example ................. Configuration template
 │
@@ -356,7 +358,6 @@ python3 -m py_compile main.py email_handler.py file_handler.py log_analyser.py
 Create a `.env` file in the project root with these variables:
 
 ```bash
-# for my client i also provide a .env.example client can rename that file from .env.example to .env and just replace your mail and password as per given variables
 # Email Configuration
 ALERT_EMAIL_SENDER=your_gmail@gmail.com
 ALERT_EMAIL_PASSWORD=your_16digit_app_password  # Gmail app-specific password
@@ -465,6 +466,7 @@ working/
 ├── visualize_threats.py ............. Real-time threat charts
 ├── init.sh .......................... Service control script
 ├── run.sh ........................... User-friendly wrapper
+├── mutt.sh .......................... Mutt email alert script
 └── .env.example ..................... Configuration template
 ```
 
@@ -991,9 +993,9 @@ MIT License - See LICENSE file for details
 ##  Support & Contact
 
 - **Issues:** GitHub Issues page
-- **Email:** monujangraji10@example.com
+- **Email:** jangramonu908@gmail.com
 - **LinkedIn:** linkedin.com/in/monu-jangra-8b343437a
-- **Documentation:** This README
+- **Documentation:** This README and README inside analysis_output for proofs of working
 
 ---
 
