@@ -122,7 +122,7 @@ Ideal for system administrators managing Linux servers who need instant visibili
 
 ### 1. **Zero External Dependencies for Analysis**
 - ✅ Built-in JSON parsing and analysis
-- ✅ No need for Splunk, ELK, Datadog, or other expensive SIEM solutions
+- ✅ No need for Splunk, ELK, Datadog, or other expensive SIEM solutions , live visualisation is provided 
 - ✅ Generate production-grade reports from threat_ip.json directly
 - ✅ Custom analysis scripts can easily consume JSON output
 
@@ -356,6 +356,7 @@ python3 -m py_compile main.py email_handler.py file_handler.py log_analyser.py
 Create a `.env` file in the project root with these variables:
 
 ```bash
+# for my client i also provide a .env.example client can rename that file from .env.example to .env and just replace your mail and password as per given variables
 # Email Configuration
 ALERT_EMAIL_SENDER=your_gmail@gmail.com
 ALERT_EMAIL_PASSWORD=your_16digit_app_password  # Gmail app-specific password
