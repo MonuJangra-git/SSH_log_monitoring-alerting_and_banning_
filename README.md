@@ -134,7 +134,8 @@ Ideal for system administrators managing Linux servers who need instant visibili
 - ✅ Scales to millions of log entries
 
 ### 3. **Modular Architecture**
-- ✅ Separate concerns: email_handler, file_handler, firewall_blocker
+- ✅ Separate concerns: email_handler, file_handler, firewall_auto_ip_blocker
+- ✅ All modules live in `working/` directory
 - ✅ Easy to extend with new detection patterns
 - ✅ Pluggable components for custom workflows
 
@@ -163,35 +164,26 @@ Ideal for system administrators managing Linux servers who need instant visibili
 ### Project Directory Layout
 
 ```
-log_monitoring-alerting_and_banning/
+SSH_log_monitoring-alerting_and_banning/
 ├── 📄 README.md ........................ Project documentation
-├── 📄 .env.example ..................... Configuration template
 ├── 📄 .gitignore ....................... Git exclude rules
-├── 📄 requirements.txt ................. Python dependencies
-│
-├── 🐍 Python Core Modules
-│   ├── main.py ......................... Entry point, reads env vars
-│   ├── log_analyser.py ................. SSH log pattern matching engine
-│   ├── email_handler.py ................ SMTP email alerting system
-│   ├── file_handler.py ................. Output file writing
-│   ├── firewall_auto_ip_blocker.py ..... Automatic IP blocking daemon
-|   └── visualize_threats.py ............ Real-time threat visualization
-|   └── firewall-auto-setup.py ............ automatically-firewall-setup
-│   
-├── 📜 Shell Scripts
-│   ├── init.sh ......................... Service control (start/stop/status)
-│   └── run.sh .......................... User-friendly wrapper for init.sh
+├── 📄 requirements.txt ................. Python dependencies (regex, matplotlib)
 │
 ├── 📁 working/ (All Executable Files)
-│   ├── main.py ......................... [Copy of main entry point]
-│   ├── log_analyser.py ................. [Copy of analyzer]
-│   ├── email_handler.py ................ [Copy of email handler]
-│   ├── file_handler.py ................. [Copy of file handler]
-│   ├── firewall_auto_ip_blocker.py ..... [Copy of firewall blocker]
-│   ├── visualize_threats.py ............ [Copy of visualizer]
-│   ├── init.sh ......................... [Copy of init script]
-│   ├── run.sh .......................... [Copy of run script]
-│   └── .env.example .................... [Copy of env template]
+│   ├── 🐍 Python Core Modules
+│   │   ├── main.py ..................... Entry point – starts the monitoring loop
+│   │   ├── log_analyser.py ............. SSH log pattern matching engine
+│   │   ├── email_handler.py ............ SMTP email alerting system
+│   │   ├── file_handler.py ............. Output file writing
+│   │   ├── firewall_auto_ip_blocker.py . Automatic IP blocking daemon
+│   │   ├── firewall-auto-setup.py ...... Auto-configures firewalld before start
+│   │   └── visualize_threats.py ........ Real-time matplotlib threat charts
+│   │
+│   ├── 📜 Shell Scripts
+│   │   ├── init.sh ..................... Service control (start/stop/restart/status)
+│   │   └── run.sh ...................... User-friendly wrapper for init.sh
+│   │
+│   └── 📄 .env.example ................. Configuration template
 │
 ├── 📁 analysis_output/ (Runtime Generated)
 │   ├── threat_ip.log ................... Detected threats (human-readable)
@@ -199,16 +191,11 @@ log_monitoring-alerting_and_banning/
 │   ├── ips_detected.txt ................ IP list for automation
 │   ├── firewall_rules.log .............. Firewall action audit trail
 │   ├── output.log ...................... Application activity log
+│   ├── main.log ........................ main.py stdout/stderr
+│   ├── firewall.log .................... firewall_auto_ip_blocker.py stdout/stderr
 │   ├── main.pid ........................ Main process ID (when running)
 │   ├── firewall.pid .................... Firewall blocker process ID
-│   └── main.log ........................ Main process output logs
-│
-├── 📁 support_files/ (Legacy & Helpers)
-│   ├── README.md ....................... Helper documentation
-│   ├── legacy_log_monitoring_and_alerting.py [Old version]
-│   ├── firewall-auto-setup.py .......... Firewall initialization
-│   ├── cli_interface.sh ................ Command-line interface
-│   └── runner.sh ....................... Additional automation script
+│   └── README.md ....................... Screenshots & visual documentation
 │
 └── 📁 .git/ ............................ Git repository metadata
 ```
@@ -250,18 +237,20 @@ log_monitoring-alerting_and_banning/
 └─────────────────────────────────────────────────────────────┘
 
 SHELL SCRIPT EXECUTION FLOW:
-  run.sh (user-friendly)
-    └─▶ init.sh (service control)
+  run.sh (user-friendly, in working/)
+    └─▶ init.sh (service control, in working/)
+         ├─▶ firewall-auto-setup.py (firewall init)
          ├─▶ Start main.py (monitoring)
          ├─▶ Start firewall_auto_ip_blocker.py (blocking)
-         └─▶ Optional: python visualize_threats.py (charts)
+         └─▶ Optional: python3 visualize_threats.py (charts)
 
-FILES EXECUTION ORDER:
+FILES EXECUTION ORDER (all inside working/):
   1. run.sh ........................ Entry point (user friendly)
   2. init.sh ....................... Service manager
-  3. main.py ....................... Log monitoring (from working/)
-  4. firewall_auto_ip_blocker.py ... IP blocking (from working/)
-  5. visualize_threats.py .......... Visualization (from working/)
+  3. firewall-auto-setup.py ........ Firewall initialization
+  4. main.py ....................... Log monitoring
+  5. firewall_auto_ip_blocker.py ... IP blocking
+  6. visualize_threats.py .......... Visualization
 ```
 
 ---
@@ -273,10 +262,10 @@ FILES EXECUTION ORDER:
 ```bash
 # 1. Clone repository
 git clone https://github.com/MonuJangra-git/log_monitoring-alerting_and_banning_
-cd log_monitoring-alerting_and_banning
+cd log_monitoring-alerting_and_banning/working
 
 # 2. Install dependencies
-pip install -r requirements.txt
+pip install -r ../requirements.txt
 
 # 3. Create .env file from template
 cp .env.example .env
@@ -295,17 +284,19 @@ bash run.sh logs
 bash run.sh view
 ```
 
-### Alternative: Run Python Files Directly
+### Alternative: Run Python Files Directly (from `working/`)
 
 ```bash
+cd working/
+
 # Terminal 1: Start main monitor
-sudo python main.py
+sudo python3 main.py
 
 # Terminal 2: Start firewall blocker
-sudo python firewall_auto_ip_blocker.py
+sudo python3 firewall_auto_ip_blocker.py
 
 # Terminal 3: Launch visualization
-python visualize_threats.py
+python3 visualize_threats.py
 ```
 
 ---
@@ -326,14 +317,14 @@ python visualize_threats.py
 #### 1. Clone the Repository
 ```bash
 git clone https://github.com/MonuJangra-git/log_monitoring-alerting_and_banning_
-cd log_monitoring-alerting_and_banning
+cd log_monitoring-alerting_and_banning/working
 ```
 
 #### 2. Install Python Dependencies
 ```bash
-pip install -r requirements.txt
+pip install -r ../requirements.txt
 # Or with specific version:
-pip install -r requirements.txt --upgrade
+pip install -r ../requirements.txt --upgrade
 ```
 
 **Dependencies:**
@@ -353,10 +344,8 @@ vi .env
 
 #### 4. Verify Installation
 ```bash
-python -m py_compile main.py email_handler.py file_handler.py log_analyser.py
-
-# Should run without errors
-python main.py --help  # If help exists, or just start monitoring
+# From the working/ directory
+python3 -m py_compile main.py email_handler.py file_handler.py log_analyser.py
 ```
 
 ---
@@ -461,9 +450,9 @@ bash init.sh threats
 bash init.sh view
 ```
 
-### Available Working Directory
+### Working Directory
 
-All executable files are organized in the `working/` directory for easy access:
+All executable files live in `working/`:
 
 ```
 working/
@@ -472,6 +461,7 @@ working/
 ├── email_handler.py ................. Email alert system
 ├── file_handler.py .................. Output file management
 ├── firewall_auto_ip_blocker.py ...... Automatic IP blocking
+├── firewall-auto-setup.py ........... Auto-configures firewalld
 ├── visualize_threats.py ............. Real-time threat charts
 ├── init.sh .......................... Service control script
 ├── run.sh ........................... User-friendly wrapper
@@ -484,7 +474,7 @@ working/
 # Enter working directory
 cd working/
 
-# Start monitoring from any directory
+# Start monitoring
 sudo bash run.sh start
 
 # Full system info
@@ -505,26 +495,23 @@ sudo bash run.sh stop
 
 ### 1. Start Real-Time Monitoring
 ```bash
-# Using shell script (recommended)
+# Using shell script (recommended, from working/)
 sudo bash run.sh start
 
 # Or direct Python
-sudo python main.py
+sudo python3 main.py
 
 # Run in background with nohup
-nohup sudo python main.py > analysis_output/monitor.log 2>&1 &
+nohup sudo python3 main.py > analysis_output/monitor.log 2>&1 &
 ```
 
 ### 2. Start Firewall Auto-Blocker
 ```bash
-# Using shell script
-sudo bash run.sh start  # Starts both monitor and blocker
+# Using shell script (starts both monitor and blocker)
+sudo bash run.sh start
 
 # Or direct Python
-sudo python firewall_auto_ip_blocker.py
-
-# Run in background
-nohup sudo python firewall_auto_ip_blocker.py > analysis_output/firewall.log 2>&1 &
+sudo python3 firewall_auto_ip_blocker.py
 ```
 
 ### 3. Visualize Threats in Real-Time
@@ -533,7 +520,7 @@ nohup sudo python firewall_auto_ip_blocker.py > analysis_output/firewall.log 2>&
 bash run.sh view
 
 # Or direct Python
-python visualize_threats.py
+python3 visualize_threats.py
 
 # Displays live updating charts:
 # - Brute-force attempts
@@ -587,8 +574,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/path/to/log_monitoring-alerting_and_banning
-ExecStart=/usr/bin/bash /path/to/run.sh start
+WorkingDirectory=/path/to/log_monitoring-alerting_and_banning/working
+ExecStart=/usr/bin/bash /path/to/log_monitoring-alerting_and_banning/working/run.sh start
 Restart=on-failure
 RestartSec=10
 
@@ -631,7 +618,11 @@ analysis_output/
 ├── ips_detected.txt ........ All detected IPs (one per line)
 ├── firewall_rules.log ...... Firewall rule execution log
 ├── output.log .............. Application activity log
-└── README.md ............... Documentation
+├── main.log ................ main.py stdout/stderr
+├── firewall.log ............ firewall_auto_ip_blocker.py stdout/stderr
+├── main.pid ................ Main process ID (when running)
+├── firewall.pid ............ Firewall blocker process ID
+└── README.md ............... Screenshots & visual documentation
 ```
 
 ### Understanding Each Output File
