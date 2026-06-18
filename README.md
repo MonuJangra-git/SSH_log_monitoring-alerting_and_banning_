@@ -50,7 +50,7 @@ Ideal for system administrators managing Linux servers who need instant visibili
   - Maximum authentication attempts exceeded (lockout events)
   - PAM authentication failures with detailed attribution
   - Invalid user login attempts
-  - SSH rate anomalies
+  - Invalid username attempts
 
 - **Smart Regex Pattern Matching** (5 detection patterns):
   ```
@@ -129,9 +129,9 @@ Ideal for system administrators managing Linux servers who need instant visibili
 
 ### 2. **Lightweight & Fast**
 - ✅ Minimal resource footprint (pure Python, no heavy frameworks)
-- ✅ Non-blocking I/O with efficient polling
-- ✅ Set-based IP deduplication (O(1) lookup)
-- ✅ Scales to millions of log entries
+- ✅ Tail-follow I/O — only reads new lines, not the whole file
+- ✅ Set-based IP deduplication in firewall blocker (O(1) lookup)
+- ✅ Suitable for standard server log volumes
 
 ### 3. **Modular Architecture**
 - ✅ Separate concerns: email_handler, file_handler, firewall_auto_ip_blocker
@@ -746,20 +746,17 @@ plt.savefig('threat_chart.png', dpi=150)
 ### 1. **Credential Protection**
 - ✅ Environment variables only (no hardcoding)
 - ✅ `.env` file excluded from git (in .gitignore)
-- ✅ Placeholder detection (`__prefix` checks)
-- ✅ Safe defaults for missing credentials
+- ✅ Placeholder credentials in SMTP handler prevent accidental sends
 
 ### 2. **Input Validation**
 - ✅ Regex IP address validation before firewall rules
-- ✅ Email format validation
-- ✅ Log line sanitization
-- ✅ Attack pattern whitelisting
+- ✅ IPv4 format validation before firewall rules
+- ✅ Attack pattern matching via compiled regex
 
 ### 3. **Access Control**
 - ✅ Root/sudo required for firewall operations
 - ✅ Read-only access to auth.log
-- ✅ Protected output directory permissions
-- ✅ PID file tracking for single instance
+- ✅ PID file tracking prevents duplicate service instances
 
 ### 4. **Audit Trail**
 - ✅ All firewall rules logged with timestamps
@@ -827,7 +824,7 @@ syslog.syslog(f"SSH Monitor: Threat detected from {ip}")
 |---|---|
 | Memory Usage | ~15-30 MB (idle) |
 | CPU Usage | <1% (idle) |
-| Log Processing Speed | 700-1100 lines/sec |
+| Log Processing Speed | ~500–1,000 lines/sec (under active attack) |
 | IP Deduplication | O(1) set lookup |
 | Email Timeout | 30 seconds |
 | Firewall Poll Interval | 3 seconds |
@@ -836,9 +833,9 @@ syslog.syslog(f"SSH Monitor: Threat detected from {ip}")
 
 - ✅ Handles 1M+ log entries efficiently
 - ✅ Set-based deduplication prevents memory bloat
-- ✅ File I/O optimized with append-only writes
-- ✅ Regex patterns compiled once at startup
-- ✅ Non-blocking reads with configurable sleep intervals
+- ✅ Tail-follow approach — skips already-processed lines on startup
+- ✅ Regex patterns compiled once at startup (patterns list)
+- ✅ Configurable sleep interval between reads
 
 ### Optimization Tips
 
@@ -993,9 +990,9 @@ MIT License - See LICENSE file for details
 ##  Support & Contact
 
 - **Issues:** GitHub Issues page
-- **Email:** jangramonu908@gmail.com
+- **Email:** monujangraji10@example.com
 - **LinkedIn:** linkedin.com/in/monu-jangra-8b343437a
-- **Documentation:** This README and README inside analysis_output for proofs of working
+- **Documentation:** This README
 
 ---
 
