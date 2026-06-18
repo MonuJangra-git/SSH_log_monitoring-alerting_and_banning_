@@ -956,10 +956,10 @@ sudo nice -n 15 python main.py
 
 ### Requested Features (Community)
 - 🔄 Windows event log support (PowerShell integration)
-- 🔄 Database backend option (PostgreSQL/MySQL)
+- 🔄 Database backend option (PostgreSQL/MySQL) 
 - 🔄 REST API for remote management
-- 🔄 Kubernetes integration
-- 🔄 Machine learning model training
+- 🔄 Kubernetes integration (i may add this after learning Kubernetes)
+- 🔄 Machine learning model training 
 
 ---
 
