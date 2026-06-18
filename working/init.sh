@@ -7,6 +7,22 @@ if [[ ${root} != 0 ]]; then
     echo "Exiting..............."
     exit 
 fi
+if ! command -v firewalld &> /dev/null; then
+    echo "firewalld not found. Installing..."
+    sudo apt-get update -y
+    sudo apt-get install -y firewalld
+else
+    echo "firewalld is already installed."
+fi
+FOLDER_NAME="analysis_output"
+
+# Check if folder exists
+if [ ! -d "$FOLDER_NAME" ]; then
+    echo "Folder '$FOLDER_NAME' not found. Creating..."
+    mkdir "$FOLDER_NAME"
+else
+    echo "Folder '$FOLDER_NAME' already exists."
+fi
 
 
 case "$1" in
