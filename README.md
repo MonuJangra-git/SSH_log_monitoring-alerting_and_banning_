@@ -827,7 +827,7 @@ syslog.syslog(f"SSH Monitor: Threat detected from {ip}")
 |---|---|
 | Memory Usage | ~15-30 MB (idle) |
 | CPU Usage | <1% (idle) |
-| Log Processing Speed | 10,000 lines/sec |
+| Log Processing Speed | 700-1100 lines/sec |
 | IP Deduplication | O(1) set lookup |
 | Email Timeout | 30 seconds |
 | Firewall Poll Interval | 3 seconds |
