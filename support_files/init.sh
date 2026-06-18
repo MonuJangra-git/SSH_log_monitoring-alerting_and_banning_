@@ -7,7 +7,16 @@ if [[ ${root} != 0 ]]; then
     echo "Exiting..............."
     exit 
 fi
+#!/bin/bash
 
+# Check if firewalld is installed
+if ! command -v firewalld &> /dev/null; then
+    echo "firewalld not found. Installing..."
+    sudo apt-get update -y
+    sudo apt-get install -y firewalld
+else
+    echo "firewalld is already installed."
+fi
 FOLDER_NAME="analysis_output"
 
 # Check if folder exists
