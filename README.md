@@ -520,7 +520,7 @@ sudo python3 firewall_auto_ip_blocker.py
 ```bash
 # Using shell script
 bash run.sh view
-
+# note if the client already use splunk then he can also use it to set the continous monitor and set the path of the file 
 # Or direct Python
 python3 visualize_threats.py
 
