@@ -1,5 +1,5 @@
 # Below Documentation show every thing how project starts and how a client can visualise it easily in different formats according to requirement 
-# Screenshot Overview: Firewall Deployment and Service Status
+#  Firewall Deployment and Service Status
 
 <img width="785" height="678" alt="starting-tutorial" src="https://github.com/user-attachments/assets/207da4f1-f715-461f-ba17-dfd5604c01b7" />
 
@@ -11,7 +11,7 @@ The output highlights that `MJ-IPguard` service is running, ensuring automated p
 Additionally, the `status` command confirms that both `main.py` and `firewall_auto_ip_blocker.py` are active, proving the system is functioning as intended.
 
 
-# Screenshot Overview: Process Verification with ps aux
+#  Process Verification with ps aux
 
 <img width="987" height="383" alt="Proof-that-file-is-working" src="https://github.com/user-attachments/assets/d62c822f-9033-49f4-b6d8-85c7074628de" />
 
@@ -40,7 +40,7 @@ The chart compares **brute_force (50)**, **lockout (56)**, **pam_failure (48)**,
 By visualizing the data, it highlights that lockout attacks were the most frequent, providing a clear statistical overview of intrusion attempts.
 
 
-# Screenshot Overview: Threat Detection Log (Detailed)
+#  Threat Detection Log (Detailed)
 
 <img width="1111" height="689" alt="logs-scoorecard-in-scorecard-format" src="https://github.com/user-attachments/assets/72c1f330-6a18-4fe0-8b94-4474e0dc6072" />
 
@@ -52,7 +52,7 @@ The log confirms a total of **154 attacks detected**, serving as detailed proof 
 This evidence demonstrates how the system records unauthorized access attempts for forensic and security analysis.
 
 
-# Screenshot Overview: Firewall Rule Updates Log
+#  Firewall Rule Updates Log
 
 <img width="911" height="681" alt="firewall_ips_blocked" src="https://github.com/user-attachments/assets/983c9862-e412-4392-957a-0df978a9f9fb" />
 
@@ -73,7 +73,7 @@ It lists allowed services such as HTTP, HTTPS, MySQL, and SSH, along with multip
 These entries confirm that the firewall is actively blocking malicious or unauthorized IPs, demonstrating effective network access control and rule enforcement.
 
 
-# Screenshot Overview: Threat Detection Scorecard Log
+#  Threat Detection Scorecard Log
 
 <img width="1111" height="689" alt="logs-scoorecard-in-scorecard-format" src="https://github.com/user-attachments/assets/b1b2ccba-cb32-4d63-b626-90ed33262409" />
 
