@@ -988,7 +988,17 @@ We welcome contributions! Here's how to get started:
 - Test with multiple log samples
 
 ---
+## 🔎 Skills Demonstrated
 
+- Linux Log Analysis
+- Regex-based Threat Detection
+- Firewall Automation (firewalld)
+- SMTP Email Integration
+- Process Management (PID tracking)
+- Systemd Service Integration
+- JSON-based Log Analytics
+- Data Visualization (matplotlib)
+- Secure Environment Variable Handling
 ## 📝 License
 
 MIT License - See LICENSE file for details
