@@ -86,3 +86,4 @@ This serves as proof of the system’s real-time threat monitoring and logging c
 
 These screenshots collectively demonstrate the **deployment, monitoring, and security enforcement** features of the Firewall Management & Threat Detection System.  
 They provide verifiable proof of functionality, making the project transparent and reliable for presentation, audits, or client review.
+> Note: All screenshots were captured in a controlled lab environment using test SSH attack simulations.
