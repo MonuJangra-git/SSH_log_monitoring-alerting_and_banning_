@@ -4,7 +4,15 @@
 > Real-time threat detection, automated firewall blocking, and intelligent alerting without external dependencies
 
 ---
+## Problem Statement
 
+Small and mid-sized Linux server environments often lack real-time SSH attack detection and automated response without deploying complex SIEM systems.
+
+This project provides a lightweight alternative that:
+- Detects brute-force attacks
+- Blocks malicious IPs automatically
+- Generates structured logs for analysis
+- Sends intelligent alerts
 ## 📋 Table of Contents of MJ-IPguard
 
 - [Overview](#overview)
