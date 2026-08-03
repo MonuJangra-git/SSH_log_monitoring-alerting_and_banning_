@@ -1009,7 +1009,7 @@ MIT License - See LICENSE file for details
 
 - **Issues:** GitHub Issues page
 - **Email:** monujangraji10@example.com
-- **LinkedIn:** linkedin.com/in/monu-jangra-8b343437a
+- **LinkedIn:** www.linkedin.com/in/monu-jangra-8b343437a
 - **Documentation:** This README
 
 ---
