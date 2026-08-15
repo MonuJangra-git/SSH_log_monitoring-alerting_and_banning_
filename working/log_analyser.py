@@ -43,6 +43,7 @@ class log_monitoring_and_alerting:
                 line = f.readline()
                 if not line.strip() or len(line) <= 7:
                     self.position = f.tell()
+
                     if not line:
                         time.sleep(2)
                         self.wait += 1
@@ -90,16 +91,16 @@ class log_monitoring_and_alerting:
 
                         total_atk = sum(stats.values())
                         #if total_atk>=500: # email alert sent for every 500 attacks detected for better performance and to avoid sending multiple emails for the same attack type and also to keep the log file clean for new attacks and also to avoid confusion for the user
-                        if total_atk%500 == 0 and total_atk != 0: # email alert sent for every 500 attacks detected for better performance and to avoid sending multiple emails for the same attack type and also to keep the log file clean for new attacks and also to avoid confusion for the user
-                            try:
-                                self.email_handler.mutt()
-                            except:
-                                self.email_handler.smtp_mailer_main()
-                            open("threat_ip.log", "w").close()
-                            open("threat_ip.json", "w").close()
-                            # option for user to reset the stats and recent logs after sending the email alert for better performance and to avoid sending multiple emails for the same attack type and also to keep the log file clean for new attacks and also to avoid confusion for the user
-                            # for key in stats:
-                            #     stats[key] = 0
-                            #     recent_logs[key] = []
-                            print("Mail Sent Successfully")          
+                if total_atk%500 == 0 and total_atk != 0: # email alert sent for every 500 attacks detected for better performance and to avoid sending multiple emails for the same attack type and also to keep the log file clean for new attacks and also to avoid confusion for the user
+                    try:
+                        self.email_handler.mutt()
+                    except:
+                        self.email_handler.smtp_mailer_main()
+                    open("threat_ip.log", "w").close()
+                    open("threat_ip.json", "w").close()
+                    # option for user to reset the stats and recent logs after sending the email alert for better performance and to avoid sending multiple emails for the same attack type and also to keep the log file clean for new attacks and also to avoid confusion for the user
+                    # for key in stats:
+                    #     stats[key] = 0
+                    #     recent_logs[key] = []
+                    print("Mail Sent Successfully")          
                 self.position = f.tell()

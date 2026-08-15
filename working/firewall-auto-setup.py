@@ -56,14 +56,14 @@ def firewall_deploy():
                 print("firewalld_status_active and now your firewalld is running")
                 return 1
             else:
-                print("status inactive \n checking status \nwait to reactive it ")   
+                print("status inactive \n checking status \nwait to re-active it ")   
                 firewall_deploy()
                 return 1 
         else :
             print("there are some issue.........")
             return 0 
 if __name__ == "__main__":
-    print("checking the admin ")
+    print("checking the user is admin or not ")
     if admin_check() == 1:
         print("admin check successfull \n checking the firewall")
         if firewall_check()==1:
