@@ -27,6 +27,21 @@ fi
 
 case "$1" in
     start)
+        echo "======================================"
+        echo "Setting up rate limiting with whitelist..."
+
+        # Run the whitelist script (must be root)
+        if ! sudo bash ./protect-my-ip.sh; then
+            echo "❌ Failed to set up firewall rules."
+            exit 1
+        fi
+
+        # Add rate‑limit rule for SSH (or whatever service you need)
+        sudo firewall-cmd --permanent --add-rich-rule='rule service name="ssh" limit value="10/minute" accept'
+
+        # Reload to apply
+        sudo firewall-cmd --reload
+        echo "✅ Firewall rules applied."
         echo "🔍 Checking firewall status..."
         # ensure we run the setup script from this directory
         python3 ./firewall-auto-setup.py || true

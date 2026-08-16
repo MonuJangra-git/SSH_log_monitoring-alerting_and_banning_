@@ -1,4 +1,4 @@
-# 🔐 Log Monitoring Alerting System & Banning System - v1.5
+# 🔐 Log Monitoring Alerting System & Banning System - v2.0
 
 > **Enterprise-Grade SSH Attack Detection & Automated Response**  
 > Real-time threat detection, automated firewall blocking, and intelligent alerting without external dependencies
@@ -45,6 +45,10 @@ This project provides a lightweight alternative that:
 - **Visualize** attack patterns with live matplotlib charts
 - **Firewall-auto-setup** Auto-setup firewall before stating for blocking ip
 - **Lightweight** This project is very light weight and very fast 
+ - **Visualize** attack patterns with live matplotlib charts
+ - **Self-Protection** `protect-my-ip.sh` — helper script that adds your current IP to a temporary whitelist to prevent accidental lockouts when firewall rules are applied
+ - **Rate Limiting** Optional SSH rate-limiting rule applied during setup (default: `10/minute`) to reduce brute-force impact
+ - **Lightweight** This project is very light weight and very fast 
 
 Ideal for system administrators managing Linux servers who need instant visibility into SSH and other attack patterns without expensive SIEM infrastructure.
 
@@ -190,6 +194,7 @@ SSH_log_monitoring-alerting_and_banning/
 │   ├── 📜 Shell Scripts
 │   │   ├── init.sh ..................... Service control (start/stop/restart/status)
 │   │   ├── run.sh ...................... User-friendly wrapper for init.sh
+│   │   ├── protect-my-ip.sh ............ Whitelist current IP to avoid lockouts during firewall setup
 │   │   └── mutt.sh ..................... Sends threat_ip.log alert via mutt
 │   │
 │   └── 📄 .env.example ................. Configuration template
@@ -350,6 +355,8 @@ nano .env
 # or
 vi .env
 ```
+
+Note: The `init.sh` startup routine now runs `protect-my-ip.sh` to temporarily whitelist your current IP before applying firewall rules, and applies an SSH rate-limiting rich-rule (default: `10/minute`). To adjust or disable the rate limit, edit the `init.sh` line that calls `firewall-cmd --permanent --add-rich-rule` or run `firewall-cmd` manually.
 
 #### 4. Verify Installation
 ```bash
