@@ -107,7 +107,14 @@ case "$1" in
         ;;
     view)
         echo " Starting threat visualization..."
-        python3 visualize_threats.py
+        read -p "You want which type of visualization? (web/terminal): " choice
+        if [[ $choice == "web" ]]; then
+            python3 visualize_web.py
+        elif [[ $choice == "terminal" ]]; then
+            python3 visualize_threats.py
+        else
+            echo "Invalid choice."
+        fi
         ;;
 
     logs)
