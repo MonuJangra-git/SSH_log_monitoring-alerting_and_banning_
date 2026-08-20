@@ -1,33 +1,37 @@
-# 🔐 Log Monitoring Alerting System & Banning System - v2.0
+# 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v2.5
 
-> **Enterprise-Grade SSH Attack Detection & Automated Response**  
-> Real-time threat detection, automated firewall blocking, and intelligent alerting without external dependencies
+> Lightweight SSH attack detection, automated firewall blocking, and email alerting — no SIEM required.
 
 ---
+
 ## Problem Statement
 
-Small and mid-sized Linux server environments often lack real-time SSH attack detection and automated response without deploying complex SIEM systems.
+Small and mid-sized Linux servers often lack real-time SSH attack detection without deploying complex SIEM systems. MJ-IPguard provides a lightweight alternative that:
 
-This project provides a lightweight alternative that:
-- Detects brute-force attacks
-- Blocks malicious IPs automatically
-- Generates structured logs for analysis
-- Sends intelligent alerts
-## 📋 Table of Contents of MJ-IPguard
+- Detects brute-force attacks in real time by tailing `/var/log/auth.log`
+- Blocks malicious IPs automatically via `firewalld` rich rules
+- Generates structured logs and JSON reports for analysis
+- Sends email alerts every 500 detected attacks
+
+---
+
+## 📋 Table of Contents
 
 - [Overview](#overview)
 - [🎯 Key Features](#-key-features)
-- [💪 Project Strengths](#-project-strengths)
+- [⚙️ How It Works — Data Flow](#️-how-it-works--data-flow)
 - [🏗️ Architecture & Directory Structure](#️-architecture--directory-structure)
 - [⚡ Quick Start](#-quick-start)
 - [🔧 Installation & Setup](#-installation--setup)
 - [⚙️ Configuration](#️-configuration)
-- [📊 Usage Commands](#-usage-commands)
-- [📁 Output & Analysis](#-output--analysis)
-- [🔍 Built-in Visualization](#-built-in-visualization)
+- [📊 Usage](#-usage)
+- [📁 Output Files](#-output-files)
+- [🔍 Visualization](#-visualization)
 - [🛡️ Security Features](#️-security-features)
-- [⚙️ Advanced Configuration](#️-advanced-configuration)
-- [🚀 Performance & Scalability](#-performance--scalability)
+- [📈 Market Relevance — Why This Matters](#-market-relevance--why-this-matters)
+- [🆚 MJ-IPguard vs Alternatives](#-mj-ipguard-vs-alternatives)
+- [🎯 Who Should Use This](#-who-should-use-this)
+- [🔮 Possible Future Enhancements](#-possible-future-enhancements)
 - [🐛 Troubleshooting](#-troubleshooting)
 - [📝 License](#-license)
 
@@ -35,1000 +39,451 @@ This project provides a lightweight alternative that:
 
 ## Overview
 
-** Log Monitoring & Alerting System** is a lightweight yet powerful Python-based security tool designed to:
+MJ-IPguard is a Python-based security tool that:
 
-- **Monitor** Log authentication logs in real-time
-- **Detect** sophisticated brute-force attacks, lockout attempts, and PAM failures
-- **Alert** via email on suspicious activity (configurable thresholds)
-- **Block** attacking IPs automatically using firewalld
-- **Analyze** threats with built-in JSON reporting (no Splunk/ELK needed!)
-- **Visualize** attack patterns with live matplotlib charts
-- **Firewall-auto-setup** Auto-setup firewall before stating for blocking ip
-- **Lightweight** This project is very light weight and very fast 
- - **Visualize** attack patterns with live matplotlib charts
- - **Self-Protection** `protect-my-ip.sh` — helper script that adds your current IP to a temporary whitelist to prevent accidental lockouts when firewall rules are applied
- - **Rate Limiting** Optional SSH rate-limiting rule applied during setup (default: `10/minute`) to reduce brute-force impact
- - **Lightweight** This project is very light weight and very fast 
-
-Ideal for system administrators managing Linux servers who need instant visibility into SSH and other attack patterns without expensive SIEM infrastructure.
+- **Monitors** `/var/log/auth.log` in real time using tail-follow I/O
+- **Detects** brute-force attacks, lockout events, and PAM failures via 5 regex patterns
+- **Blocks** attacking IPs automatically using `firewall-cmd` rich rules
+- **Alerts** via email (mutt first, SMTP fallback) every 500 cumulative attacks
+- **Reports** structured threat data to `threat_ip.log` and `threat_ip.json`
+- **Visualizes** attack counts via a live matplotlib chart or a Flask web dashboard
+- **Protects** your own IP before applying firewall rules using `protect-my-ip.sh`
+- **Rate-limits** SSH connections to 10/minute during setup
 
 ---
 
 ## 🎯 Key Features
 
-### 🔴 Real-Time Threat Detection
-- **Multiple Attack Pattern Recognition:**
-  - Brute-force password attempts (standard and localhost)
-  - Maximum authentication attempts exceeded (lockout events)
-  - PAM authentication failures with detailed attribution
-  - Invalid user login attempts
-  - Invalid username attempts
+### 🔴 Real-Time Threat Detection (`log_analyser.py`)
 
-- **Smart Regex Pattern Matching** (5 detection patterns):
-  ```
-  ✓ Failed password for [user] from [IP]
-  ✓ error: maximum authentication attempts exceeded
-  ✓ authentication failure with rhost extraction
-  ✓ pam_unix failures with advanced parsing
-  ✓ Local host brute-force attempts
-  ```
+Monitors `/var/log/auth.log` continuously and matches 5 regex patterns:
 
-### 📧 Intelligent Email Alerting
-- Configurable alert thresholds (default: 500 failed attempts)
-- **Dual delivery method** — tries mutt first, falls back to SMTP automatically
-- `mutt.sh` — sends `threat_ip.log` as both email body and attachment via mutt
-- SMTP delivery to Gmail as fallback if mutt is unavailable
-- Credentials loaded from `.env` file (no hardcoding)
-- Graceful error handling with detailed logging
+| Pattern | Category |
+|---|---|
+| `Failed password for [user] from [IP]` | `brute_force` |
+| `Failed password for [user] from ::1` | `brute_force` (localhost) |
+| `error: maximum authentication attempts exceeded` | `lockout` |
+| `authentication failure; rhost=[IP]` | `pam_failure` |
+| `pam_unix(sshd:auth): authentication failure; rhost=` | `lockout` |
 
-### 🔥 Automated Firewall Integration
-- **Firewalld Integration:**
-  - Continuous monitoring of detected IPs
-  - Automatic rich-rule creation for dropping traffic
-  - Duplicate prevention using set-based tracking
-  - Detailed firewall action logging with timestamps
-  - IPv4 address validation before blocking
-  - 3-second polling interval for new threats
+- Tail-follow I/O — only reads new lines, not the whole file
+- Extracts and saves attacker IPs to `ips_detected.txt`
+- Keeps last 10 log lines per attack category for forensic review
 
-- **Persistent IP Blocking:**
-- **automatically bock suspsious ips **
+### 📧 Email Alerting (`email_handler.py` + `mutt.sh`)
+
+- Triggers every **500 cumulative attacks** detected
+- Tries `mutt` first — sends `threat_ip.log` as both body and attachment
+- Falls back to SMTP (Gmail) if mutt is unavailable
+- Credentials loaded from `.env` file — nothing hardcoded
+- After sending, `threat_ip.log` and `threat_ip.json` are cleared for the next cycle
+
+### 🔥 Automated Firewall Blocking (`firewall_auto_ip_blocker.py`)
+
+- Continuously monitors `ips_detected.txt` for new IPs (polls every 3 seconds, file-size based)
+- Validates each IP against a strict IPv4 regex before acting
+- Adds a `firewall-cmd` drop rule per IP:
   ```bash
-  firewall-cmd --add-rich-rule 'rule family="ipv4" source address="192.168.x.x" drop'
+  firewall-cmd --add-rich-rule 'rule family="ipv4" source address="<IP>" drop'
   ```
+- Uses a `set` to skip already-processed IPs (O(1) deduplication)
+- Logs every action (success/failure/invalid) with timestamps to `firewall_rules.log`
 
-### 📊 Built-in JSON Analytics (No External Tools Required!)
-- **Key Strength:** Eliminates need for Splunk, ELK Stack, or Datadog
-- Structured threat data export in JSON format
-- Real-time statistics aggregation:
-  - Brute-force attempt counts
-  - Lockout events tracking
-  - PAM failure statistics
-  - Detailed per-attack logging
-- Machine-readable format for custom analysis scripts
-- Last 10 attacks per category for forensic review
+### 🔧 Firewall Auto-Setup (`firewall-auto-setup.py`)
 
-### 📈 Live Visualization Dashboard
-- Real-time attack type charts using matplotlib
-- Color-coded bar graphs (red for brute-force, orange for lockouts, etc.)
-- Auto-updating every 5 seconds
-- Clean, professional visualization
-- Grid overlay for easy reading
-- Value labels on each bar
+- Checks if the user is root
+- Verifies `firewalld` is installed
+- Enables and starts `firewalld` via `systemctl`
+- Recursively retries activation if the service is not yet active
 
-### 🔐 Security-First Design
-- **Environment-based Configuration:**
-  - Zero hardcoded credentials in source code
-  - Credentials loaded from `.env` file (excluded from git)
-  - Safe defaults with `__` prefix placeholders
-  - All sensitive data outside version control
+### 🛡️ Self-Protection (`protect-my-ip.sh`)
 
-- **Multi-Layer Output:**
-  - threat_ip.log: Human-readable threat summary
-  - threat_ip.json: Machine-readable analysis data
-  - ips_detected.txt: Simple IP list for automation
-  - firewall_rules.log: Audit trail of all blocking actions
-  - output.log: Complete application activity log
+- Collects all local IPv4 addresses and optionally the public IP (via `curl`)
+- Adds a high-priority (`-1`) permanent `accept` rich rule for each IP before any blocking rules are applied
+- Prevents accidental lockout of the admin during firewall setup
+
+### 📊 JSON & Log Reporting (`file_handler.py`)
+
+- `threat_ip.log` — human-readable scorecard with per-category counts and last 10 logs
+- `threat_ip.json` — machine-readable JSON with `total_attacks` and `attack_details` per category
+- `output.log` — appended CLI activity log of every detection event
+- `ips_detected.txt` — plain IP list consumed by the firewall blocker
+
+### 📈 Visualization
+
+Two modes available via `bash run.sh view`:
+
+| Mode | File | Access |
+|---|---|---|
+| Terminal chart | `visualize_threats.py` | Desktop matplotlib window, refreshes every 5s |
+| Web dashboard | `visualize_web.py` | `http://localhost:8080`, auto-refreshes every 5s |
+
+Both read from `threat_ip.json` and display bar charts for `brute_force`, `lockout`, `pam_failure`, and `other_failed`.
 
 ---
 
-## 💪 Project Strengths
+## ⚙️ How It Works — Data Flow
 
-### 1. **Zero External Dependencies for Analysis**
-- ✅ Built-in JSON parsing and analysis
-- ✅ No need for Splunk, ELK, Datadog, or other expensive SIEM solutions
-- ✅ Generate production-grade reports from threat_ip.json directly
-- ✅ Custom analysis scripts can easily consume JSON output
+Understanding the internal flow helps you debug, extend, or integrate MJ-IPguard into your own stack.
 
-### 2. **Lightweight & Fast**
-- ✅ Minimal resource footprint (pure Python, no heavy frameworks)
-- ✅ Tail-follow I/O — only reads new lines, not the whole file
-- ✅ Set-based IP deduplication in firewall blocker (O(1) lookup)
-- ✅ Suitable for standard server log volumes
+```
+/var/log/auth.log
+       │
+       │  tail-follow (seek to EOF on start, read new lines only)
+       ▼
+  log_analyser.py  ──── regex match (5 patterns) ────►  stats dict (brute_force / lockout / pam_failure / other_failed)
+       │                                                        │
+       │  extract IP from matched line                         │  write on every match
+       ▼                                                        ▼
+ ips_detected.txt                                    threat_ip.log  +  threat_ip.json
+       │                                                        │
+       │  file-size poll every 3s                              │  every 500 total attacks
+       ▼                                                        ▼
+firewall_auto_ip_blocker.py                           email_handler.py
+  │  validate IPv4 regex                                │  try mutt first
+  │  skip duplicates (set)                              │  fallback → SMTP (Gmail)
+  ▼                                                     ▼
+firewall-cmd rich rule DROP                     alert email sent
+  │                                             threat_ip.log + .json cleared
+  ▼
+firewall_rules.log  (audit trail)
+```
 
-### 3. **Modular Architecture**
-- ✅ Separate concerns: email_handler, file_handler, firewall_auto_ip_blocker
-- ✅ All modules live in `working/` directory
-- ✅ Easy to extend with new detection patterns
-- ✅ Pluggable components for custom workflows
+**Two independent background processes run in parallel:**
+- `main.py` — reads auth.log, detects threats, writes output files, triggers email
+- `firewall_auto_ip_blocker.py` — watches `ips_detected.txt`, blocks IPs via firewalld
 
-### 4. **Production-Ready**
-- ✅ Comprehensive error handling
-- ✅ Graceful degradation (continues if email fails)
-- ✅ Automatic log rotation prevention
-- ✅ Detailed audit trails
-
-### 5. **Security-Conscious**
-- ✅ No credentials in source control
-- ✅ Automatic credential validation
-- ✅ IP address validation before firewall rules
-- ✅ Pattern-based attack detection (no heuristics/magic numbers)
-
-### 6. **Developer-Friendly**
-- ✅ Well-commented code
-- ✅ Clear class structure
-- ✅ Easy configuration via environment variables
-- ✅ Simple to integrate into monitoring stacks
+Both are started by `init.sh` using `nohup`, with PIDs stored in `analysis_output/` for clean shutdown.
 
 ---
 
 ## 🏗️ Architecture & Directory Structure
 
-### Project Directory Layout
-
 ```
-SSH_log_monitoring-alerting_and_banning/
-├── 📄 README.md ........................ Project documentation
-├── 📄 .gitignore ....................... Git exclude rules
-├── 📄 requirements.txt ................. Python dependencies (regex, matplotlib)
+SSH_log_monitoring-alerting_and_banning_/
+├── README.md
+├── .gitignore
+├── requirements.txt
 │
-├── 📁 working/ (All Executable Files)
-│   ├── 🐍 Python Core Modules
-│   │   ├── main.py ..................... Entry point – starts the monitoring loop
-│   │   ├── log_analyser.py ............. SSH log pattern matching engine
-│   │   ├── email_handler.py ............ SMTP email alerting system
-│   │   ├── file_handler.py ............. Output file writing
-│   │   ├── firewall_auto_ip_blocker.py . Automatic IP blocking daemon
-│   │   ├── firewall-auto-setup.py ...... Auto-configures firewalld before start
-│   │   └── visualize_threats.py ........ Real-time matplotlib threat charts
-│   │
-│   ├── 📜 Shell Scripts
-│   │   ├── init.sh ..................... Service control (start/stop/restart/status)
-│   │   ├── run.sh ...................... User-friendly wrapper for init.sh
-│   │   ├── protect-my-ip.sh ............ Whitelist current IP to avoid lockouts during firewall setup
-│   │   └── mutt.sh ..................... Sends threat_ip.log alert via mutt
-│   │
-│   └── 📄 .env.example ................. Configuration template
+├── working/                          ← All executable files
+│   ├── main.py                       ← Entry point
+│   ├── log_analyser.py               ← Detection engine
+│   ├── email_handler.py              ← Email alerting (mutt + SMTP)
+│   ├── file_handler.py               ← Output file writer
+│   ├── firewall_auto_ip_blocker.py   ← IP blocking daemon
+│   ├── firewall-auto-setup.py        ← Firewall setup checker
+│   ├── visualize_threats.py          ← Matplotlib terminal chart
+│   ├── visualize_web.py              ← Flask web dashboard
+│   ├── init.sh                       ← Service controller (start/stop/restart/status/view/logs)
+│   ├── run.sh                        ← User-friendly wrapper for init.sh
+│   ├── protect-my-ip.sh              ← Whitelist admin IP before blocking
+│   ├── mutt.sh                       ← Send threat_ip.log via mutt
+│   └── .env.example                  ← Configuration template
 │
-├── 📁 analysis_output/ (Runtime Generated)
-│   ├── threat_ip.log ................... Detected threats (human-readable)
-│   ├── threat_ip.json .................. Detected threats (JSON format)
-│   ├── ips_detected.txt ................ IP list for automation
-│   ├── firewall_rules.log .............. Firewall action audit trail
-│   ├── output.log ...................... Application activity log
-│   ├── main.log ........................ main.py stdout/stderr
-│   ├── firewall.log .................... firewall_auto_ip_blocker.py stdout/stderr
-│   ├── main.pid ........................ Main process ID (when running)
-│   ├── firewall.pid .................... Firewall blocker process ID
-│   └── README.md ....................... Screenshots & visual documentation
-│
-└── 📁 .git/ ............................ Git repository metadata
-```
-
-### System Data Flow
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                  SSH Log Monitoring System                   │
-├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌──────────────┐      ┌────────────────────┐               │
-│  │ /var/log/    │      │  log_analyser.py   │               │
-│  │ auth.log     │─────▶│  - Pattern Match   │               │
-│  │              │      │  - Threat Extract  │               │
-│  └──────────────┘      └────────────────────┘               │
-│                               │                              │
-│                               ├─────▶ ┌─────────────────┐   │
-│                               │       │ file_handler.py │   │
-│                               │       │ Write to disk:  │   │
-│                               │       │ - threat_ip.log │   │
-│                               │       │ - threat_ip.json│   │
-│                               │       │ - output.log    │   │
-│                               │       └─────────────────┘   │
-│                               │                              │
-│                               ├─────▶ ┌─────────────────┐   │
-│                               │       │email_handler.py  │   │
-│                               │       │ SMTP Alert       |   |
-|                               │       │ and mutt Alert   |   |
-│                               │       │ (threshold-based)│   │
-│                               │       └─────────────────┘   │
-│                               │                              │
-│                               └─────▶ ┌──────────────────┐  │
-│                                       │firewall_blocker  │  │
-│                                       │Read ips_detected │  │
-│                                       │firewall-cmd rules│  │
-│                                       └──────────────────┘  │
-│                                                               │
-└─────────────────────────────────────────────────────────────┘
-
-SHELL SCRIPT EXECUTION FLOW:
-  run.sh (user-friendly, in working/)
-    └─▶ init.sh (service control, in working/)
-         ├─▶ firewall-auto-setup.py (firewall init)
-         ├─▶ Start main.py (monitoring)
-         ├─▶ Start firewall_auto_ip_blocker.py (blocking)
-         └─▶ Optional: python3 visualize_threats.py (charts)
-
-FILES EXECUTION ORDER (all inside working/):
-  1. run.sh ........................ Entry point (user friendly)
-  2. init.sh ....................... Service manager
-  3. firewall-auto-setup.py ........ Firewall initialization
-  4. main.py ....................... Log monitoring
-  5. firewall_auto_ip_blocker.py ... IP blocking
-  6. visualize_threats.py .......... Visualization
+└── analysis_output/                  ← Runtime-generated (auto-created)
+    ├── threat_ip.log                 ← Human-readable threat scorecard
+    ├── threat_ip.json                ← JSON threat data
+    ├── ips_detected.txt              ← Detected attacker IPs
+    ├── firewall_rules.log            ← Firewall action audit trail
+    ├── output.log                    ← Detection event log
+    ├── main.log                      ← main.py stdout/stderr
+    ├── firewall.log                  ← firewall_auto_ip_blocker.py stdout/stderr
+    ├── main.pid                      ← PID of main.py process
+    └── firewall.pid                  ← PID of firewall blocker process
 ```
 
 ---
 
 ## ⚡ Quick Start
 
-### Minimal Setup (60 seconds)
-
 ```bash
-# 1. Clone repository
-git clone https://github.com/MonuJangra-git/log_monitoring-alerting_and_banning_
-cd log_monitoring-alerting_and_banning/working
+git clone https://github.com/MonuJangra-git/MJ-IPguard.git
+cd SSH_log_monitoring-alerting_and_banning_/working
 
-# 2. Install dependencies
+cp .env.example .env
+# Edit .env with your email credentials
+
 pip install -r ../requirements.txt
 
-# 3. Create .env file from template
-cp .env.example .env
-nano .env  # Edit with your Gmail credentials  or if client already have mutt mail system then no need to any mail setup
-
-# 4. Start the monitor using the shell script (RECOMMENDED)
-sudo bash run.sh start
-
-# 5. Check status
-bash run.sh status
-
-# 6. View real-time logs
-bash run.sh logs
-
-# 7. Launch threat visualization
-bash run.sh view
-```
-
-### Alternative: Run Python Files Directly (from `working/`)
-
-```bash
-cd working/
-
-# Terminal 1: Start main monitor
-sudo python3 main.py
-
-# Terminal 2: Start firewall blocker
-sudo python3 firewall_auto_ip_blocker.py
-
-# Terminal 3: Launch visualization
-python3 visualize_threats.py
+bash run.sh
+# Choose option 1 to start
 ```
 
 ---
 
 ## 🔧 Installation & Setup
 
-### System Requirements
+**Requirements:**
+- Linux with `/var/log/auth.log` (Debian/Ubuntu) or `/var/log/secure` (RHEL/CentOS)
+- Python 3.x
+- `firewalld` installed and accessible
+- Root/sudo access
+- `mutt` (optional, for email via mutt)
 
-- **OS:** Linux (Ubuntu 20.04+, CentOS 8+, Debian 11+)
-- **Python:** 3.8 or higher
-- **Firewall:** firewalld (for IP blocking feature)
-- **Permissions:** Root/sudo access required for:
-  - Reading `/var/log/auth.log`
-  - Executing firewall-cmd
-
-### Step-by-Step Installation
-
-#### 1. Clone the Repository
+**Install dependencies:**
 ```bash
-git clone https://github.com/MonuJangra-git/log_monitoring-alerting_and_banning_
-cd log_monitoring-alerting_and_banning/working
+pip install -r requirements.txt
+# Installs: regex, matplotlib, Flask
 ```
 
-#### 2. Install Python Dependencies
+**Install firewalld (if missing):**
 ```bash
-pip install -r ../requirements.txt
-# Or with specific version:
-pip install -r ../requirements.txt --upgrade
-```
-
-**Dependencies:**
-- `regex` (advanced pattern matching)
-- `matplotlib` (threat visualization)
-
-#### 3. Configure Environment Variables
-```bash
-# Copy the example file
-cp .env.example .env
-
-# Edit with your credentials
-nano .env
-# or
-vi .env
-```
-
-Note: The `init.sh` startup routine now runs `protect-my-ip.sh` to temporarily whitelist your current IP before applying firewall rules, and applies an SSH rate-limiting rich-rule (default: `10/minute`). To adjust or disable the rate limit, edit the `init.sh` line that calls `firewall-cmd --permanent --add-rich-rule` or run `firewall-cmd` manually.
-
-#### 4. Verify Installation
-```bash
-# From the working/ directory
-python3 -m py_compile main.py email_handler.py file_handler.py log_analyser.py
+sudo apt install firewalld -y      # Debian/Ubuntu
+sudo yum install firewalld -y      # RHEL/CentOS
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-### Environment Variables (`.env` file)
+Copy `.env.example` to `.env` inside `working/` and fill in your values:
 
-Create a `.env` file in the project root with these variables:
-
-```bash
-# Email Configuration
-ALERT_EMAIL_SENDER=your_gmail@gmail.com
-ALERT_EMAIL_PASSWORD=your_16digit_app_password  # Gmail app-specific password
-ALERT_EMAIL_RECIPIENT=alert_recipient@example.com
-
-# Log Monitoring
-LOG_FILE_PATH=/var/log/auth.log  # Path to SSH auth log
-
-# Alert Threshold
-THREAT_THRESHOLD=500  # Send email alert when attacks exceed this count client can change according to his comfort
+```env
+ALERT_EMAIL_SENDER=your_sender@example.com
+ALERT_EMAIL_PASSWORD=your_app_password_here
+ALERT_EMAIL_RECIPIENT=your_recipient@example.com
+LOG_FILE_PATH=/var/log/auth.log
 ```
 
-### Gmail Setup (Required for Email Alerts)
+> Use a Gmail App Password, not your account password. Generate one at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
 
-1. **Enable 2-Factor Authentication** on your Gmail account
-2. **Create App Password:**
-   - Go to myaccount.google.com → Security
-   - Find "App Passwords" (requires 2FA enabled)
-   - Select "Mail" and "Windows Computer"
-   - Copy the 16-character password
-   - Paste into `ALERT_EMAIL_PASSWORD` in `.env`
+The `.env` file is excluded from git via `.gitignore`.
 
-### Log File Paths by Distribution
+---
 
-| Distribution | Log Path |
+## 📊 Usage
+
+From the `working/` directory, just run:
+
+```bash
+bash run.sh
+```
+
+An interactive menu appears — no need to remember any command names:
+
+```
+======================================================
+        🛡️  MJ-IPguard — SSH Attack Defense
+======================================================
+
+  1)  Start          — Setup firewall & start all services
+  2)  Stop           — Stop all running services
+  3)  Restart        — Restart all services
+  4)  Status         — Check if services are running
+  5)  Web Dashboard  — Live threat chart at http://localhost:8080
+  6)  Terminal Chart — Live threat chart in terminal window
+  7)  Live Logs      — Stream main service logs (Ctrl+C to exit)
+  8)  Firewall Logs  — Stream firewall action logs (Ctrl+C to exit)
+  9)  Recent Threats — Show last 20 detected threats
+  0)  Exit
+
+Choose an option [0-9]:
+```
+
+Type a number and press Enter. That's it.
+
+**What option `1` (Start) does step by step:**
+1. Checks for root
+2. Installs `firewalld` if missing
+3. Creates `analysis_output/` if missing
+4. Runs `protect-my-ip.sh` to whitelist your IP
+5. Adds SSH rate-limit rule: `10/minute`
+6. Reloads firewall
+7. Runs `firewall-auto-setup.py` to verify firewalld is active
+8. Starts `main.py` as a background process (PID saved to `main.pid`)
+9. Starts `firewall_auto_ip_blocker.py` as a background process (PID saved to `firewall.pid`)
+
+---
+
+## 📁 Output Files
+
+| File | Description |
 |---|---|
-| Ubuntu/Debian | `/var/log/auth.log` |
-| CentOS/RHEL | `/var/log/secure` |
-| Fedora | `/var/log/audit/audit.log` |
-| Generic | `/var/log/auth.log` |
+| `threat_ip.log` | Scorecard with total attacks and last 10 logs per category |
+| `threat_ip.json` | JSON with `total_attacks` and per-category `failed_attempts` + `recent_logs` |
+| `ips_detected.txt` | One IP per line, consumed by the firewall blocker |
+| `firewall_rules.log` | Timestamped log of every firewall add/skip/fail action |
+| `output.log` | Appended log of every pattern match detected |
+| `main.log` | stdout/stderr of main.py |
+| `firewall.log` | stdout/stderr of firewall_auto_ip_blocker.py |
 
----
-
-## 📊 Usage Commands
-
-### Shell Script Method (Recommended - All-in-One)
-
-```bash
-# Start both monitoring and firewall blocker
-sudo bash run.sh start
-
-# Stop services
-sudo bash run.sh stop
-
-# Restart services
-sudo bash run.sh restart
-
-# Check service status
-bash run.sh status
-
-# View main application logs (live)
-bash run.sh logs
-
-# View firewall action logs (live)
-bash run.sh firewall-logs
-
-# View recent threats
-bash run.sh threats
-
-# Launch threat visualization
-bash run.sh view
-```
-
-### Direct Script Execution (init.sh)
-
-For more control, use `init.sh` directly:
-
-```bash
-# All-in-one startup
-sudo bash init.sh start
-
-# Shutdown
-sudo bash init.sh stop
-
-# Restart everything
-sudo bash init.sh restart
-
-# Check running services
-bash init.sh status
-
-# View real-time logs
-bash init.sh logs
-
-# View firewall logs
-bash init.sh firewall-logs
-
-# See recent threats
-bash init.sh threats
-
-# Launch visualization
-bash init.sh view
-```
-
-### Working Directory
-
-All executable files live in `working/`:
-
-```
-working/
-├── main.py .......................... Main monitoring entry point
-├── log_analyser.py .................. SSH log pattern matching
-├── email_handler.py ................. Email alert system
-├── file_handler.py .................. Output file management
-├── firewall_auto_ip_blocker.py ...... Automatic IP blocking
-├── firewall-auto-setup.py ........... Auto-configures firewalld
-├── visualize_threats.py ............. Real-time threat charts
-├── init.sh .......................... Service control script
-├── run.sh ........................... User-friendly wrapper
-├── mutt.sh .......................... Mutt email alert script
-└── .env.example ..................... Configuration template
-```
-
-### Quick Commands Reference
-
-```bash
-# Enter working directory
-cd working/
-
-# Start monitoring
-sudo bash run.sh start
-
-# Full system info
-bash run.sh status
-
-# View what IPs got blocked
-bash run.sh firewall-logs
-
-# See attack patterns
-bash run.sh threats
-
-# Interactive visualization
-bash run.sh view
-
-# Stop when done
-sudo bash run.sh stop
-```
-
-### 1. Start Real-Time Monitoring
-```bash
-# Using shell script (recommended, from working/)
-sudo bash run.sh start
-
-# Or direct Python
-sudo python3 main.py
-
-# Run in background with nohup
-nohup sudo python3 main.py > analysis_output/monitor.log 2>&1 &
-```
-
-### 2. Start Firewall Auto-Blocker
-```bash
-# Using shell script (starts both monitor and blocker)
-sudo bash run.sh start
-
-# Or direct Python
-sudo python3 firewall_auto_ip_blocker.py
-```
-
-### 3. Visualize Threats in Real-Time
-```bash
-# Using shell script
-bash run.sh view
-# note if the client already use splunk then he can also use it to set the continous monitor and set the path of the file 
-# Or direct Python
-python3 visualize_threats.py
-
-# Displays live updating charts:
-# - Brute-force attempts
-# - Lockout events  
-# - PAM failures
-# - Other failed attempts
-```
-
-### 4. Monitor Logs in Real-Time
-```bash
-# Watch main application output
-bash run.sh logs
-
-# Watch firewall actions
-bash run.sh firewall-logs
-
-# Watch all detected IPs
-tail -f analysis_output/ips_detected.txt
-```
-
-### 5. Analyze JSON Threat Data
-```bash
-# Pretty-print threat JSON
-python -m json.tool analysis_output/threat_ip.json
-
-# Query specific attack data
-python -c "import json; 
-data = json.load(open('analysis_output/threat_ip.json')); 
-print(data['stats'])"
-
-# Count total attacks
-python -c "import json; 
-data = json.load(open('analysis_output/threat_ip.json')); 
-total = sum(data['stats'].values()); 
-print(f'Total attacks detected: {total}')"
-```
-
-### 6. System Integration
-
-#### Run as Systemd Service
-```bash
-# Create service file
-sudo nano /etc/systemd/system/ssh-monitor.service
-```
-
-```ini
-[Unit]
-Description=SSH Log Monitoring and Alerting Service
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/path/to/log_monitoring-alerting_and_banning/working
-ExecStart=/usr/bin/bash /path/to/log_monitoring-alerting_and_banning/working/run.sh start
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-# Enable and start service
-sudo systemctl daemon-reload
-sudo systemctl enable ssh-monitor.service
-sudo systemctl start ssh-monitor.service
-sudo systemctl status ssh-monitor.service
-```
-
-#### Run Multiple Instances
-```bash
-# Terminal 1: Start services via shell script
-sudo bash run.sh start
-
-# Terminal 2: View logs
-bash run.sh logs
-
-# Terminal 3: View threats
-bash run.sh threats
-
-# Terminal 4: Launch visualization
-bash run.sh view
-```
-
----
-
-## 📁 Output & Analysis
-
-### Output Directory Structure
-```
-analysis_output/
-├── threat_ip.log ............ Detected threats (text format)
-├── threat_ip.json .......... Detected threats (JSON format)
-├── ips_detected.txt ........ All detected IPs (one per line)
-├── firewall_rules.log ...... Firewall rule execution log
-├── output.log .............. Application activity log
-├── main.log ................ main.py stdout/stderr
-├── firewall.log ............ firewall_auto_ip_blocker.py stdout/stderr
-├── main.pid ................ Main process ID (when running)
-├── firewall.pid ............ Firewall blocker process ID
-└── README.md ............... Screenshots & visual documentation
-```
-
-### Understanding Each Output File
-
-#### 1. `threat_ip.log` (Human-Readable Threats)
-```
-Sample Output:
-Timestamp: 2024-06-17 14:23:45
------------------------------------
-Attack Statistics:
-- Brute Force Attempts: 127
-- Lockout Events: 8
-- PAM Authentication Failures: 42
-- Other Failed Attempts: 3
-
-Recent Brute Force Attacks:
-[IP: 192.168.1.100] User: admin, 5 attempts
-[IP: 10.0.0.50] User: root, 12 attempts
-...
-```
-
-#### 2. `threat_ip.json` (Machine-Readable - No Splunk Needed!)
+**Sample `threat_ip.json`:**
 ```json
 {
-  "timestamp": "2024-06-17T14:23:45",
-  "stats": {
-    "brute_force": 127,
-    "lockout": 8,
-    "pam_failure": 42,
-    "other_failed": 3
-  },
-  "attack_details": {
-    "brute_force": {
-      "count": 127,
-      "failed_attempts": 127,
-      "recent_attacks": [...]
+    "total_attacks": 154,
+    "attack_details": {
+        "brute_force": { "failed_attempts": 50, "recent_logs": [...] },
+        "lockout":     { "failed_attempts": 56, "recent_logs": [...] },
+        "pam_failure": { "failed_attempts": 48, "recent_logs": [...] },
+        "other_failed":{ "failed_attempts": 0,  "recent_logs": [] }
     }
-  }
 }
 ```
 
-**Why JSON?** Parse directly with Python/bash/any language. No need for:
-- ✅ Just native tools!
-- ✅ FREE OF COST NO NEED TO PAY ANYMORE
-- ❌ Splunk licenses ($$$)
-- ❌ ELK Stack complexity
-- ❌ Datadog subscriptions
-
-#### 3. `ips_detected.txt` (IP List for Automation)
-```
-192.168.1.100
-10.0.0.50
-203.0.113.42
-...
-```
-
-Perfect for:
-- Custom blocking scripts
-- Feeding into threat intelligence systems
-- Generating reports
-- Geolocation analysis
-
-#### 4. `firewall_rules.log` (Audit Trail)
-```
-[*] Continuous monitoring started
-[✓] Valid IP: 192.168.1.100 - Adding to firewall rules
-[✓] Successfully added 192.168.1.100 to firewall rules at 2024-06-17 14:24:30
-[!] Invalid IP: 256.256.256.256 - Skipping at 2024-06-17 14:25:00
-```
-
-#### 5. `output.log` (Full Activity Log)
-```
-[2024-06-17 14:23:45] Starting log monitor for /var/log/auth.log
-[2024-06-17 14:23:50] Detected: brute_force_attempt_standard :- ('admin', '192.168.1.100')
-[2024-06-17 14:24:30] Email alert triggered (500+ attacks detected)
-...
-```
-
 ---
 
-## 🔍 Built-in Visualization
+## 🔍 Visualization
 
-### Launch Interactive Dashboard
-```bash
-python visualize_threats.py
+Both visualization modes are accessible from the interactive menu:
+
+**Option 6 — Terminal chart** (requires a desktop environment):
 ```
-
-### Chart Features
-- **Real-time updates** every 5 seconds
-- **Color-coded bars:**
-  - Red: Brute-force attempts
-  - Orange: Lockout events
-  - Blue: PAM failures
-  - Green: Other failures
-- **Value labels** on each bar
-- **Grid overlay** for easy reading
-- **Responsive layout** that adapts to data
-
-### Using Visualization Output
-
-```bash
-# Save chart to file
-python -c "
-import matplotlib.pyplot as plt
-from visualize_threats import update
-fig, ax = plt.subplots()
-update(0)
-plt.savefig('threat_chart.png', dpi=150)
-"
-
-# Embed in reports
-# The chart PNG can be attached to email alerts or reports
+bash run.sh  →  choose 6
 ```
+Opens a matplotlib window with a color-coded bar chart that refreshes every 5 seconds.
+
+**Option 5 — Web dashboard** (headless-friendly):
+```
+bash run.sh  →  choose 5
+# Open http://localhost:8080 in your browser
+```
+Serves a PNG bar chart via Flask, auto-refreshing every 5 seconds. Accessible remotely if port 8080 is open.
 
 ---
 
 ## 🛡️ Security Features
 
-### 1. **Credential Protection**
-- ✅ Environment variables only (no hardcoding)
-- ✅ `.env` file excluded from git (in .gitignore)
-- ✅ Placeholder credentials in SMTP handler prevent accidental sends
-
-### 2. **Input Validation**
-- ✅ Regex IP address validation before firewall rules
-- ✅ IPv4 format validation before firewall rules
-- ✅ Attack pattern matching via compiled regex
-
-### 3. **Access Control**
-- ✅ Root/sudo required for firewall operations
-- ✅ Read-only access to auth.log
-- ✅ PID file tracking prevents duplicate service instances
-
-### 4. **Audit Trail**
-- ✅ All firewall rules logged with timestamps
-- ✅ Failed operations recorded
-- ✅ Complete activity log maintained
-- ✅ Email delivery status tracked
-
-### 5. **Error Handling**
-- ✅ Graceful email failure (continues if SMTP fails)
-- ✅ Missing log file handling
-- ✅ Timeout protection (30s for email)
-- ✅ Duplicate IP filtering
+- No credentials in source code — all loaded from `.env`
+- `.env` excluded from git via `.gitignore`
+- Admin IP whitelisted before any blocking rules are applied (`protect-my-ip.sh`)
+- SSH rate-limiting applied at startup (`10/minute`)
+- Strict IPv4 regex validation before any `firewall-cmd` call
+- Set-based deduplication prevents redundant firewall rules
+- `firewall-cmd` rules are runtime (not `--permanent`) by default — reboot clears them
 
 ---
 
-## ⚙️ Advanced Configuration
+## 📈 Market Relevance — Why This Matters
 
-### Custom Pattern Detection
+### The Problem at Scale
 
-Edit `log_analyser.py` to add new SSH attack patterns:
+SSH brute-force attacks are not rare edge cases — they are constant background noise on any internet-facing Linux server. According to public threat intelligence reports:
 
-```python
-patterns = [
-    (re.compile(r'Your new pattern here'), "detection_name"),
-    # Existing patterns...
-]
-```
+- Exposed SSH ports receive automated login attempts **within minutes** of going online
+- The majority of compromised servers are breached via **credential stuffing and brute-force**, not zero-days
+- Most small teams and individual developers **cannot afford** Splunk, Datadog, or CrowdStrike — licenses start at hundreds to thousands of dollars per month
 
-### Custom Email Templates
+### Where MJ-IPguard Fits
 
-Edit `email_handler.py`:
+The security tooling market has a clear gap between:
 
-```python
-msg.set_content("""
-Threat Alert Summary:
-- Brute Force: {stats['brute_force']}
-- Lockouts: {stats['lockout']}
-- PAM Failures: {stats['pam_failure']}
-""")
-```
+| Tier | Tools | Cost | Complexity |
+|---|---|---|---|
+| Enterprise SIEM | Splunk, IBM QRadar, Microsoft Sentinel | $$$$ | High — dedicated security team needed |
+| Mid-market | Datadog Security, Elastic SIEM | $$$ | Medium — cloud setup required |
+| Open-source heavy | Wazuh, OSSEC, Suricata | Free but complex | High — agents, rules, dashboards to configure |
+| **MJ-IPguard** | **This project** | **Free** | **Low — one command to start** |
 
-### Integration with External Systems
+MJ-IPguard targets the gap that affects the most servers globally: **solo developers, small startups, VPS hosters, and sysadmins** who need real protection today without a week of setup.
 
-**Forward alerts to Slack:**
-```python
-import requests
-requests.post(SLACK_WEBHOOK, json={
-    "text": f"SSH Alert: {stats['brute_force']} attacks detected"
-})
-```
+### Why Automated Blocking Matters
 
-**Send to Syslog:**
-```python
-import syslog
-syslog.syslog(f"SSH Monitor: Threat detected from {ip}")
-```
+A human cannot respond to SSH attacks fast enough. A typical brute-force bot attempts **hundreds of passwords per minute**. Manual IP banning after the fact is reactive and ineffective. MJ-IPguard's firewall blocker runs as a daemon and blocks IPs within **3 seconds** of detection — before the attacker can succeed.
+
+### Why JSON Output Matters
+
+Structured output (`threat_ip.json`) means MJ-IPguard is not a dead-end tool. The data it produces can be:
+- Fed into a custom dashboard or Grafana
+- Parsed by a cron job to generate weekly reports
+- Consumed by a webhook to notify Slack or PagerDuty
+- Used as input for threat intelligence correlation
+
+This makes MJ-IPguard a **building block**, not just a standalone script.
+
+### Real-World Applicability
+
+- A VPS running a personal project gets scanned by bots constantly — MJ-IPguard handles this silently in the background
+- A startup with 2–3 Linux servers needs security without a dedicated SecOps team — MJ-IPguard covers SSH attack surface with one `bash run.sh start`
+- A developer learning security engineering gets a real, working detection + response pipeline to study and extend
+- A sysadmin managing multiple servers can deploy MJ-IPguard on each and receive consolidated email alerts
 
 ---
 
-## 🚀 Performance & Scalability
+## 🆚 MJ-IPguard vs Alternatives
 
-### Performance Characteristics
+| Feature | MJ-IPguard | fail2ban | Wazuh | Splunk SIEM |
+|---|---|---|---|---|
+| Real-time SSH detection | ✅ | ✅ | ✅ | ✅ |
+| Auto IP blocking via firewalld | ✅ | ✅ | ✅ | ❌ (needs integration) |
+| Email alerting | ✅ | ✅ | ✅ | ✅ |
+| JSON structured output | ✅ | ❌ | ✅ | ✅ |
+| Web visualization dashboard | ✅ (Flask) | ❌ | ✅ (complex) | ✅ (expensive) |
+| Admin IP self-protection | ✅ (built-in) | ❌ | ❌ | ❌ |
+| SSH rate limiting on setup | ✅ (auto) | ❌ | ❌ | ❌ |
+| Zero config to start | ✅ (one command) | ❌ (jail config) | ❌ (agent setup) | ❌ (cloud setup) |
+| Cost | Free | Free | Free | $$$$ |
+| Python — easy to extend | ✅ | ❌ (config-based) | ❌ (complex) | ❌ |
+| Runs on minimal VPS | ✅ | ✅ | ❌ (heavy) | ❌ (cloud) |
 
-| Metric | Value |
-|---|---|
-| Memory Usage | ~15-30 MB (idle) |
-| CPU Usage | <1% (idle) |
-| Log Processing Speed | ~500–1,000 lines/sec (under active attack) |
-| IP Deduplication | O(1) set lookup |
-| Email Timeout | 30 seconds |
-| Firewall Poll Interval | 3 seconds |
+> fail2ban is the closest alternative. MJ-IPguard differentiates with built-in JSON analytics, a web dashboard, admin self-protection, and a fully Python codebase that is easy to read and extend.
 
-### Scaling Considerations
+---
 
-- ✅ Handles 1M+ log entries efficiently
-- ✅ Set-based deduplication prevents memory bloat
-- ✅ Tail-follow approach — skips already-processed lines on startup
-- ✅ Regex patterns compiled once at startup (patterns list)
-- ✅ Configurable sleep interval between reads
+## 🎯 Who Should Use This
 
-### Optimization Tips
+- **VPS / cloud server owners** — any internet-facing Linux box running SSH
+- **Solo developers and hobbyists** — protect your side projects without enterprise overhead
+- **Small startups** — cover your SSH attack surface before you can afford a SecOps team
+- **Students learning cybersecurity** — a real, working detection + response pipeline to study
+- **Sysadmins** — lightweight daemon that runs quietly and emails you when something is wrong
+- **CTF / homelab enthusiasts** — understand what real SSH attack logs look like
 
-```bash
-# For large log files, use background process:
-nice -n 10 sudo python main.py &
+---
 
-# Reduce file I/O with higher thresholds:
-THREAT_THRESHOLD=1000 python main.py
+## 🔮 Possible Future Enhancements
 
-# Monitor resource usage:
-watch -n 1 'ps aux | grep main.py'
-```
+These are natural extensions of the current architecture — the codebase is structured to support them:
+
+- **Persistent firewall rules** — add `--permanent` flag to `firewall-cmd` calls so blocks survive reboots
+- **Configurable alert threshold** — move the `500` attack threshold from hardcoded to `.env`
+- **Slack / webhook notifications** — add a `notify_handler.py` alongside `email_handler.py`
+- **IPv6 blocking support** — extend the IP regex and firewall rules to cover `::1` and other IPv6 addresses currently detected but not blocked
+- **Whitelist file** — a `whitelist.txt` that `firewall_auto_ip_blocker.py` checks before blocking
+- **Grafana integration** — expose `/metrics` endpoint from `visualize_web.py` in Prometheus format
+- **Multi-server support** — aggregate `threat_ip.json` from multiple servers into a central dashboard
+- **Log rotation handling** — detect when `auth.log` is rotated and reset the file position
+- **Systemd service unit** — replace `nohup` with a proper `.service` file for auto-restart on crash
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Issue: Email Not Sending
-
-**Symptoms:** "[WARN] Email credentials are not configured"
-
-**Solutions:**
+**Services not starting:**
 ```bash
-# 1. Verify .env file exists and is readable
-cat .env
-
-# 2. Check Gmail app password (16 characters, no spaces)
-echo $ALERT_EMAIL_PASSWORD
-
-# 3. Verify 2-Factor Authentication is enabled on Gmail
-# Go to: myaccount.google.com → Security → App Passwords
-
-# 4. Test SMTP connection directly
-python -c "
-import smtplib
-sender = 'client_email@gmail.com'
-key = 'client_app_password'
-try:
-    with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
-        server.starttls()
-        server.login(sender, key)
-    print('✓ SMTP connection successful')
-except Exception as e:
-    print(f'✗ SMTP error: {e}')
-"
+bash run.sh status
+cat analysis_output/main.log
+cat analysis_output/firewall.log
 ```
 
-### Issue: Firewall Rules Not Applied
+**No IPs being blocked:**
+- Check `analysis_output/ips_detected.txt` has entries
+- Check `analysis_output/firewall_rules.log` for errors
+- Ensure `firewalld` is running: `systemctl status firewalld`
 
-**Symptoms:** IPs detected but not blocked (almost very low chance but I guide you for every possible situation so don't worry  )
+**Email not sending:**
+- Verify `.env` credentials are correct
+- For Gmail, use an App Password (not your account password)
+- Check `analysis_output/output.log` for SMTP errors
 
-**Solutions:**
+**Wrong log file path:**
+- Default is `/var/log/auth.log` (Debian/Ubuntu)
+- For RHEL/CentOS, change `file_name` in `main.py` to `/var/log/secure`
+
+**`firewalld` not found:**
 ```bash
-# 1. Check firewalld is running
-sudo systemctl status firewalld
-
-# 2. Test firewall-cmd manually
-sudo firewall-cmd --state
-
-# 3. Verify IP format
-cat analysis_output/ips_detected.txt
-
-# 4. Check firewall rules were added
-sudo firewall-cmd --list-rich-rules | head -10
-
-# 5. Check log for errors
-tail -50 analysis_output/firewall_rules.log | grep Error
-```
-
-### Issue: No Threats Detected
-
-**Symptoms:** Empty analysis_output files
-
-**Solutions:**
-```bash
-# 1. Verify log file path exists
-ls -lh /var/log/auth.log
-# Or for CentOS:
-ls -lh /var/log/secure
-
-# 2. Verify log file is readable
-sudo tail /var/log/auth.log | head
-
-# 3. Generate test attacks
-# On another SSH terminal, try failed logins:
-ssh -u invalid_user@localhost
-ssh -u root@localhost  # wrong password
-
-# 4. Check monitor is still running
-ps aux | grep main.py
-
-# 5. Check for errors in output log
-tail -50 analysis_output/output.log
-```
-
-### Issue: High CPU Usage
-
-**Symptoms:** Monitor consuming 20-30% CPU
-
-**Solutions:**
-```bash
-# 1. Increase sleep interval
-# Edit log_analyser.py, line 44:
-time.sleep(5)  # Increase from 2 to 5 seconds
-
-# 2. Reduce polling frequency
-# Edit firewall_blocker.py:
-time.sleep(10)  # Increase from 3 to 10 seconds
-
-# 3. Use nice to lower priority
-sudo nice -n 15 python main.py
+sudo apt install firewalld -y   # or yum
+sudo systemctl enable --now firewalld
 ```
 
 ---
 
-
-
-### Requested Features (Community)
-- 🔄 Windows event log support (PowerShell integration)
-- 🔄 Database backend option (PostgreSQL/MySQL) 
-- 🔄 REST API for remote management
-- 🔄 Kubernetes integration (i may add this after learning Kubernetes)
-- 🔄 Machine learning model training 
-
----
-
-## Contributing
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** changes: `git commit -m "Add amazing feature"`
-4. **Push** to branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
-
-### Code Guidelines
-- Follow PEP 8 style guide
-- Add docstrings to new functions
-- Update README for new features
-- Test with multiple log samples
-
----
-## 🔎 Skills Demonstrated
-
-- Linux Log Analysis
-- Regex-based Threat Detection
-- Firewall Automation (firewalld)
-- SMTP Email Integration
-- Process Management (PID tracking)
-- Systemd Service Integration
-- JSON-based Log Analytics
-- Data Visualization (matplotlib)
-- Secure Environment Variable Handling
 ## 📝 License
 
-MIT License - See LICENSE file for details
+MIT License — free to use, modify, and distribute.
 
 ---
 
-##  Support & Contact
-
-- **Issues:** GitHub Issues page
-- **Email:** monujangraji10@example.com
-- **LinkedIn:** www.linkedin.com/in/monu-jangra-8b343437a
-- **Documentation:** This README
-
----
-
-## ⭐ Show Your Support
-
-If this project helped you to secure your servers, please:
-- ⭐ Star this repository
-- 📢 Share with your DevOps/SysAdmin/Cybersecurity related friends
-- 💬 Leave feedback and suggestions
-- 🐛 Report any bugs you find
-
----
-
-**Stay Updated ,Stay Secured 🛡️**
+> **Author:** Monu Jangra  
+> **GitHub:** [MonuJangra-git](https://github.com/MonuJangra-git)  
+> **LinkedIn:** Monu Jangra  
+> ⭐ Star this project if it helped you!
