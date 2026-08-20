@@ -1025,7 +1025,7 @@ MIT License - See LICENSE file for details
 
 If this project helped you to secure your servers, please:
 - ⭐ Star this repository
-- 📢 Share with your DevOps/SysAdmin friends
+- 📢 Share with your DevOps/SysAdmin/Cybersecurity related friends
 - 💬 Leave feedback and suggestions
 - 🐛 Report any bugs you find
 
