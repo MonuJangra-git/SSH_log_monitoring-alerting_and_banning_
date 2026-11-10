@@ -1,4 +1,4 @@
-<img width="2640" height="1744" alt="b_at_the_heading_use_M" src="https://github.com/user-attachments/assets/f730ce3c-5ddb-4956-91a7-caa05278b3b1" /># 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v3.0(New Era)
+# 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v3.0(New Era)
 
 > Lightweight SSH attack detection, automated firewall blocking, and email alerting — no SIEM required.
 
@@ -175,7 +175,7 @@ Backups are copies; the original file is not truncated or deleted.
 Understanding the internal flow helps you debug, extend, or integrate MJ-IPguard into your own stack.
 
 ```
-<img width="2640" height="1744" alt="b_at_the_heading_use_M" src="https://github.com/user-attachments/assets/24917327-eb25-4663-bdc0-84626f50da6f" />
+<img width="2640" height="1744" alt="b_at_the_heading_use_M" src="https://github.com/user-attachments/assets/f730ce3c-5ddb-4956-91a7-caa05278b3b1" />
 
 ```
 
