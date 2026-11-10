@@ -15,6 +15,7 @@ else
     echo "firewalld is already installed."
 fi
 FOLDER_NAME="analysis_output"
+show_author_banner=false
 
 # Check if folder exists
 if [ ! -d "$FOLDER_NAME" ]; then
@@ -27,6 +28,7 @@ fi
 
 case "$1" in
     start)
+        show_author_banner=true
         echo "======================================"
         echo "Setting up rate limiting with whitelist..."
 
@@ -65,6 +67,14 @@ case "$1" in
             echo "✓ firewall_auto_ip_blocker.py started (PID: $!)"
         fi
 
+        if pgrep -f backup_manager.py > /dev/null; then
+            echo "✓ backup_manager.py already running."
+        else
+            nohup python3 backup_manager.py > analysis_output/backup.log 2>&1 &
+            echo $! > analysis_output/backup.pid
+            echo "✓ backup_manager.py started (PID: $!)"
+        fi
+
         echo "======================================"
         echo "🛡️  MJ-IPguard is active!"
         echo "Do your work without distraction"
@@ -72,6 +82,7 @@ case "$1" in
         ;;
 
     stop)
+        show_author_banner=true
         echo "⏹️  Stopping services..."
 
         if [ -f analysis_output/main.pid ]; then
@@ -90,10 +101,19 @@ case "$1" in
             echo "ℹ️  firewall_auto_ip_blocker.py not running."
         fi
 
+        if [ -f analysis_output/backup.pid ]; then
+            kill $(cat analysis_output/backup.pid) 2>/dev/null
+            rm -f analysis_output/backup.pid
+            echo "✓ backup_manager.py stopped."
+        else
+            echo "ℹ️  backup_manager.py not running."
+        fi
+
         echo "👋 Thanks for using MJ-IPguard!"
         ;;
 
     restart)
+        show_author_banner=true
         echo "🔄 IPguard is restarting..."
         $0 stop
         sleep 2
@@ -104,6 +124,7 @@ case "$1" in
         echo " Checking service status..."
         pgrep -f main.py > /dev/null && echo "✓ main.py is running." || echo "✗ main.py is NOT running."
         pgrep -f firewall_auto_ip_blocker.py > /dev/null && echo "✓ firewall_auto_ip_blocker.py is running." || echo "✗ firewall_auto_ip_blocker.py is NOT running."
+        pgrep -f backup_manager.py > /dev/null && echo "✓ backup_manager.py is running." || echo "✗ backup_manager.py is NOT running."
         ;;
     view)
         echo " Starting threat visualization..."
@@ -134,9 +155,11 @@ case "$1" in
 
 esac
 
-echo "======================================"
-echo "👤 Author: Monu Jangra"
-echo "📍 GitHub: MonuJangra-git"
-echo "💼 LinkedIn: Monu Jangra"
-echo "⭐ Star this project on GitHub!"
-echo "======================================"
+if [[ "$show_author_banner" == true ]]; then
+    echo "======================================"
+    echo "👤 Author: Monu Jangra"
+    echo "📍 GitHub: MonuJangra-git"
+    echo "💼 LinkedIn: Monu Jangra"
+    echo "⭐ Star this project on GitHub!"
+    echo "======================================"
+fi

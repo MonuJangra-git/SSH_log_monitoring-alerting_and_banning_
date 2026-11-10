@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MJ-IPguard | Live Security Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+  <header><div><h1>MJ-IPguard Security Dashboard</h1><p class="muted">SSH attack monitoring and automated banning</p></div><div class="header-actions"><button class="control start" onclick="controlService('start')">Start</button><button class="control restart" onclick="controlService('restart')">Restart</button><button class="control stop" onclick="controlService('stop')">Stop</button><button class="control test" onclick="openTestBanner()">Test</button><div class="live">LIVE <span id="last-update" class="muted"></span></div></div></header>
+  <div id="test-banner" class="test-banner" hidden>
+    <div class="test-card">
+      <h2>Read Carefully</h2>
+      <p>Do you want to test whether MJ-IPguard is working properly?</p>
+      <p class="warning">Info: This runs the simulator for 20 seconds and injects fake attack logs into the real auth.log. Fake attack IPs may be banned and listed. Do not use this on a production server.</p>
+      <div class="test-actions"><button id="test-yes" class="control test" onclick="startTest()" disabled>Yes (4)</button><button class="control stop" onclick="closeTestBanner()">No</button></div>
+      <p id="test-status" class="muted"></p>
+    </div>
+  </div>
+  <main><div class="grid">
+    <section class="panel box1"><h2>Live attack update</h2><div id="chart" class="chart"></div><div id="stats" class="stats"></div></section>
+    <section class="panel box2"><h2>Service health</h2><div id="services"></div><div class="service"><span>Mail</span><strong id="mail"></strong></div><div class="service"><span>Host CPU</span><strong id="host-cpu">--</strong></div><div class="service"><span>Available memory</span><strong id="host-memory">--</strong></div></section>
+    <section class="panel box3"><h2>Live source logs</h2><p id="log-path" class="muted path"></p><div id="main-log" class="log">Waiting for log data...</div></section>
+    <section class="panel box4"><h2>Failed attack logs</h2><p class="muted path">threat_ip.log</p><div id="failed-log" class="log">Waiting for threat data...</div></section>
+    <section class="panel box5"><h2>Banned IPs</h2><p class="muted path">ips_detected.txt</p><div id="banned-log" class="log">Waiting for banned IPs...</div></section>
+  </div></main><footer>Data refreshes every 2 seconds &middot; Dashboard is read-only</footer>
+<script>
+const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lines = values => values.length ? values.map(esc).join('') : 'No entries yet.';
+function render(data) {
+  const counts = data.attack_counts || {}, entries = Object.entries(counts);
+  const max = Math.max(1, ...entries.map(([,v]) => v));
+  document.querySelector('#chart').innerHTML = entries.map(([name,value]) => `<div class="bar-wrap"><span class="bar-value">${value}</span><div class="bar" style="height:${Math.max(3,value/max*130)}px"></div><span class="bar-label">${esc(name.replaceAll('_',' '))}</span></div>`).join('');
+  document.querySelector('#stats').innerHTML = entries.map(([name,value]) => `<div class="stat"><span>${esc(name.replaceAll('_',' '))}</span><strong>${value}</strong></div>`).join('') + `<div class="stat"><span>Total attacks</span><strong>${data.total_attacks || 0}</strong></div>`;
+  const service = (name,label) => { const s=data.services[name]; return `<div class="service"><span>${label}<small class="muted"> PID ${s.pid || '—'}</small></span><strong class="${s.running?'ok':'down'}">${s.running?'Running':'Stopped'}<br><small>${s.running ? `${s.cpu_percent}% CPU · ${s.memory_percent}% MEM` : esc(s.message)}</small></strong></div>`; };
+  document.querySelector('#services').innerHTML = service('monitor','Monitor') + service('firewall','Firewall blocker');
+  document.querySelector('#mail').className = data.email.configured ? 'ok' : 'down'; document.querySelector('#mail').textContent = data.email.label;
+  document.querySelector('#host-cpu').textContent = `${data.system.cpu_percent}%`; document.querySelector('#host-memory').textContent = `${data.system.memory_percent}% used`;
+  document.querySelector('#log-path').textContent = data.log_path; document.querySelector('#main-log').innerHTML = lines(data.logs.main); document.querySelector('#failed-log').innerHTML = lines(data.logs.failed); document.querySelector('#banned-log').innerHTML = lines(data.logs.banned);
+  document.querySelector('#last-update').textContent = `· ${new Date().toLocaleTimeString()}`;
+}
+async function refresh() { try { const response=await fetch('/api/state',{cache:'no-store'}); if (!response.ok) throw new Error('request failed'); render(await response.json()); } catch (error) { document.querySelector('#last-update').textContent='· connection lost'; } }
+refresh(); setInterval(refresh, 2000);
+let testCountdown = null;
+function openTestBanner() {
+  clearInterval(testCountdown);
+  const banner = document.querySelector('#test-banner');
+  const status = document.querySelector('#test-status');
+  banner.hidden = false;
+  status.textContent = '';
+  const yes = document.querySelector('#test-yes');
+  yes.disabled = true;
+  let seconds = 4;
+  yes.textContent = `Yes (${seconds})`;
+  testCountdown = setInterval(() => {
+    seconds -= 1;
+    yes.textContent = seconds ? `Yes (${seconds})` : 'Yes';
+    if (!seconds) {
+      yes.disabled = false;
+      clearInterval(testCountdown);
+      testCountdown = null;
+    }
+  }, 1000);
+}
+function closeTestBanner() {
+  clearInterval(testCountdown);
+  testCountdown = null;
+  document.querySelector('#test-banner').hidden = true;
+}
+async function startTest() {
+  const status = document.querySelector('#test-status');
+  document.querySelector('#test-yes').disabled = true;
+  status.textContent = 'Starting 20-second simulator...';
+  try {
+    const response = await fetch('/api/test/start', {method:'POST'});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Test could not start');
+    status.textContent = 'Test running. It will stop automatically after 20 seconds.';
+    setTimeout(closeTestBanner, 2200);
+  } catch (error) {
+    status.textContent = error.message;
+    document.querySelector('#test-yes').disabled = false;
+  }
+}
+async function controlService(action) {
+  const button = document.querySelector(`button[onclick="controlService('${action}')"]`);
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/control/${action}`, {method:'POST'});
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Command failed');
+    document.querySelector('#last-update').textContent = `· ${action} requested`;
+    setTimeout(refresh, action === 'restart' ? 2500 : 500);
+  } catch (error) {
+    document.querySelector('#last-update').textContent = `· ${error.message}`;
+  } finally {
+    setTimeout(() => { button.disabled = false; }, 1500);
+  }
+}
+</script></body></html>

@@ -32,6 +32,7 @@ class log_monitoring_and_alerting:
                 "pam_failure": [],
                 "other_failed": []
             }
+            total_atk = 0
             patterns = [
                 (re.compile(r'Failed password for (?:invalid user )?(\S+) from (\d+\.\d+\.\d+\.\d+)'), "brute_force_attempt_standard"),  # creates a regex object from a string pattern
                 (re.compile(r'Failed password for (?:invalid user )?(\S+) from (::1)'), "brute_force_attempt_localhost"),

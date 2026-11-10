@@ -1,0 +1,57 @@
+===========================================================================
+THREAT DETECTION SCORECARD
+===========================================================================
+
+TOTAL ATTACKS DETECTED: 124
+
+[BRUTE_FORCE]
+Failed Attempts: 36
+Last 10 Logs:
+  Nov 11 00:07:58 server sshd[1234]: Failed password for invalid user test from ::1 port 22 ssh2
+  Nov 11 00:07:59 server sshd[1234]: Failed password for invalid user test from 192.168.1.13 port 22 ssh2
+  Nov 11 00:07:59 server sshd[1234]: Failed password for invalid user oracle from 172.16.0.12 port 22 ssh2
+  Nov 11 00:08:00 server sshd[1234]: Failed password for invalid user oracle from 192.168.1.23 port 22 ssh2
+  Nov 11 00:08:01 server sshd[1234]: Failed password for invalid user ubuntu from 172.16.0.23 port 22 ssh2
+  Nov 11 00:08:01 server sshd[1234]: Failed password for invalid user test from 192.168.1.33 port 22 ssh2
+  Nov 11 00:08:01 server sshd[1234]: Failed password for invalid user postgres from 192.168.1.26 port 22 ssh2
+  Nov 11 00:08:02 server sshd[1234]: Failed password for invalid user ubuntu from ::1 port 22 ssh2
+  Nov 11 00:08:03 server sshd[1234]: Failed password for invalid user guest from 192.168.1.38 port 22 ssh2
+  Nov 11 00:08:03 server sshd[1234]: Failed password for invalid user dev from 10.0.0.18 port 22 ssh2
+
+---------------------------------------------------------------------------
+[LOCKOUT]
+Failed Attempts: 42
+Last 10 Logs:
+  Nov 11 00:07:58 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=10.0.0.2
+  Nov 11 00:07:58 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=192.168.1.24
+  Nov 11 00:07:59 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=192.168.1.41
+  Nov 11 00:08:00 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=172.16.0.6
+  Nov 11 00:08:00 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=192.168.1.44
+  Nov 11 00:08:01 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=172.16.0.15
+  Nov 11 00:08:01 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=10.0.0.10
+  Nov 11 00:08:02 server sshd[1234]: error: maximum authentication attempts exceeded for root from 10.0.0.16 port 22 ssh2
+  Nov 11 00:08:03 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=192.168.1.47
+  Nov 11 00:08:03 server sshd[1234]: error: maximum authentication attempts exceeded for root from 192.168.1.48 port 22 ssh2
+
+---------------------------------------------------------------------------
+[PAM_FAILURE]
+Failed Attempts: 46
+Last 10 Logs:
+  Nov 11 00:08:00 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=172.16.0.6
+  Nov 11 00:08:00 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=192.168.1.44
+  Nov 11 00:08:00 server sshd[1234]: authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=10.0.0.14
+  Nov 11 00:08:01 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=172.16.0.15
+  Nov 11 00:08:01 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=10.0.0.10
+  Nov 11 00:08:02 server sshd[1234]: authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=172.16.0.15
+  Nov 11 00:08:02 server sshd[1234]: authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=10.0.0.9
+  Nov 11 00:08:02 server sshd[1234]: authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=192.168.1.21
+  Nov 11 00:08:03 server sshd[1234]: pam_unix(sshd:auth): authentication failure; rhost=192.168.1.47
+  Nov 11 00:08:03 server sshd[1234]: authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=192.168.1.47
+
+---------------------------------------------------------------------------
+[OTHER_FAILED]
+Failed Attempts: 0
+Last 10 Logs:
+  No logs recorded yet.
+
+---------------------------------------------------------------------------
