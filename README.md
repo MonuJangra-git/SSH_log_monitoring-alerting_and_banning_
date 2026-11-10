@@ -148,7 +148,7 @@ memory usage, monitor/firewall PIDs and resource usage, and whether email settin
 The dashboard reads the latest log lines on each refresh, similar to `tail -f`, and continues to
 show the rest of the interface when an optional output file is unavailable.
 The HTML and CSS are served by Flask, so no separate frontend development server is required.
-Start the browser dashboard with `bash web-working.sh`. It asks whether to expose port 8080
+Start the browser dashboard with `bash web-working.sh` from `source_code/`. It asks whether to expose port 8080
 to one additional local IP; pressing Enter keeps it localhost-only. The dashboard also provides Start, Restart, and Stop controls for the monitored services.
 Run the dashboard with `sudo ./web-working.sh` if those controls need to manage root-owned
 monitoring services.
@@ -218,7 +218,7 @@ SSH_log_monitoring-alerting_and_banning_/
 ├── .gitignore
 ├── requirements.txt
 │
-├── working/                          ← All executable files
+├── source_code/                      ← All executable files
 │   ├── main.py                       ← Entry point
 │   ├── log_analyser.py               ← Detection engine
 │   ├── email_handler.py              ← Email alerting (mutt + SMTP)
@@ -253,8 +253,8 @@ SSH_log_monitoring-alerting_and_banning_/
 ```
 
 The detection output files (`threat_ip.log`, `threat_ip.json`, `ips_detected.txt`, and
-`output.log`) are created in the working directory by the Python handlers. Service stdout/stderr
-and PID files are stored under `working/analysis_output/`. The backup manager monitors both
+`output.log`) are created in the source-code directory by the Python handlers. Service stdout/stderr
+and PID files are stored under `source_code/analysis_output/`. The backup manager monitors both
 locations where applicable.
 
 ---
@@ -263,7 +263,7 @@ locations where applicable.
 
 ```bash
 git clone https://github.com/MonuJangra-git/MJ-IPguard.git
-cd SSH_log_monitoring-alerting_and_banning_/working
+cd SSH_log_monitoring-alerting_and_banning_/source_code
 
 cp .env.example .env
 # Edit .env with your email credentials
@@ -301,7 +301,7 @@ sudo yum install firewalld -y      # RHEL/CentOS
 
 ## ⚙️ Configuration
 
-Copy `.env.example` to `.env` inside `working/` and fill in your values:
+Copy `.env.example` to `.env` inside `source_code/` and fill in your values:
 
 ```env
 ALERT_EMAIL_SENDER=your_sender@example.com
@@ -318,7 +318,7 @@ The `.env` file is excluded from git via `.gitignore`.
 
 ## 📊 Usage
 
-From the `working/` directory, just run:
+From the `source_code/` directory, just run:
 
 ```bash
 bash run.sh
@@ -419,8 +419,8 @@ buttons require root privileges; `web-working.sh` requests sudo automatically.
 4. The simulator writes fake SSH failures to the configured auth log for 20 seconds, then stops.
 5. Review the dashboard counters, failed logs, banned IP list, and firewall audit log.
 
-The simulator currently included is `working/attaker.py`. The dashboard also supports
-`working/attacker.py` if the file is renamed.
+The simulator currently included is `source_code/attaker.py`. The dashboard also supports
+`source_code/attacker.py` if the file is renamed.
 
 ---
 
