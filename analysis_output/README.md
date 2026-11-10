@@ -1,3 +1,19 @@
+# MJ-IPguard Security Dashboard
+
+## Live Attack Monitoring Overview
+
+![MJ-IPguard Security Dashboard overview](./mj-ipguard-dashboard-overview.png)
+
+**Explanation:**
+This dashboard provides a real-time overview of SSH security activity, including brute-force attempts, lockouts, PAM failures, total attacks, service health, and currently banned IP addresses. The service health panel confirms that the monitoring and firewall blocker processes are running, while the live controls support starting, restarting, stopping, and testing the security services.
+
+## Threat Detection and Live Source Logs
+
+![Threat detection scorecard and live source logs](./mj-ipguard-live-logs.png)
+
+**Explanation:**
+This view shows the threat detection scorecard together with the live `/var/log/auth.log` stream. It summarizes detected attacks, displays recent failed SSH authentication events, and lists source IP addresses associated with suspicious activity, demonstrating continuous monitoring and evidence collection.
+
 # Below Documentation show every thing how project starts and how a client can visualise it easily in different formats according to requirement 
 #  Firewall Deployment and Service Status
 
