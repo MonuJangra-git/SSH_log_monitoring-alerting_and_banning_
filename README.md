@@ -1,4 +1,4 @@
-# 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v3.0(New Era)
+<img width="2640" height="1744" alt="b_at_the_heading_use_M" src="https://github.com/user-attachments/assets/f730ce3c-5ddb-4956-91a7-caa05278b3b1" /># 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v3.0(New Era)
 
 > Lightweight SSH attack detection, automated firewall blocking, and email alerting — no SIEM required.
 
@@ -175,30 +175,8 @@ Backups are copies; the original file is not truncated or deleted.
 Understanding the internal flow helps you debug, extend, or integrate MJ-IPguard into your own stack.
 
 ```
-/var/log/auth.log
-       │
-       │  tail-follow (seek to EOF on start, read new lines only)
-       ▼
-  log_analyser.py  ──── regex match (5 patterns) ────►  stats dict (brute_force / lockout / pam_failure / other_failed)
-       │                                                        │
-       │  extract IP from matched line                         │  write on every match
-       ▼                                                        ▼
- ips_detected.txt                                    threat_ip.log  +  threat_ip.json
-       │                                                        │
-       │  file-size poll every 3s                              │  every 500 total attacks
-       ▼                                                        ▼
-firewall_auto_ip_blocker.py                           email_handler.py
-  │  validate IPv4 regex                                │  try mutt first
-  │  skip duplicates (set)                              │  fallback → SMTP (Gmail)
-  ▼                                                     ▼
-firewall-cmd rich rule DROP                     alert email sent
-  │                                             threat_ip.log + .json cleared
-  ▼
-firewall_rules.log  (audit trail)
-       │
-       │  size check every 10s
-       ▼
-backup_manager.py  ────► filename.bkup1, filename.bkup2, ...
+<img width="2640" height="1744" alt="b_at_the_heading_use_M" src="https://github.com/user-attachments/assets/24917327-eb25-4663-bdc0-84626f50da6f" />
+
 ```
 
 **Three independent background processes run in parallel:**
