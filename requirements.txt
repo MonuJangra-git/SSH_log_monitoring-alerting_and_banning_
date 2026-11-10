@@ -1,2 +1,4 @@
 regex
 matplotlib
+flask
+psutil

@@ -1,4 +1,4 @@
-# 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v2.5
+# 🔐 MJ-IPguard — SSH Log Monitoring, Alerting & Banning System v3.0(New Era)
 
 > Lightweight SSH attack detection, automated firewall blocking, and email alerting — no SIEM required.
 
@@ -18,6 +18,7 @@ Small and mid-sized Linux servers often lack real-time SSH attack detection with
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [✅ Problems This Solves](#-problems-this-solves)
 - [🎯 Key Features](#-key-features)
 - [⚙️ How It Works — Data Flow](#️-how-it-works--data-flow)
 - [🏗️ Architecture & Directory Structure](#️-architecture--directory-structure)
@@ -27,6 +28,7 @@ Small and mid-sized Linux servers often lack real-time SSH attack detection with
 - [📊 Usage](#-usage)
 - [📁 Output Files](#-output-files)
 - [🔍 Visualization](#-visualization)
+- [💾 Automatic Backups](#-automatic-backups)
 - [🛡️ Security Features](#️-security-features)
 - [📈 Market Relevance — Why This Matters](#-market-relevance--why-this-matters)
 - [🆚 MJ-IPguard vs Alternatives](#-mj-ipguard-vs-alternatives)
@@ -51,6 +53,26 @@ MJ-IPguard is a Python-based security tool that:
 - **Visualizes** attack counts via a live matplotlib chart or a Flask web dashboard
 - **Protects** your own IP before applying firewall rules using `protect-my-ip.sh`
 - **Rate-limits** SSH connections to 10/minute during setup
+- **Backs up** monitored files when they reach 50 MB, using numbered `.bkupN` copies
+- **Tests** the complete detection pipeline with a time-limited attack simulator
+
+---
+
+## ✅ Problems This Solves
+
+| Problem | How MJ-IPguard solves it |
+|---|---|
+| SSH brute-force attempts are difficult to notice in real time | Tails the configured authentication log and classifies failed SSH activity immediately |
+| Manual IP blocking is slow and inconsistent | Extracts attacker IPs and passes them to an automated firewalld blocking process |
+| Firewall actions are difficult to audit | Records detection events, threat scorecards, JSON data, and firewall results with timestamps |
+| Operators cannot easily tell whether services are alive | The web dashboard shows service state, PID, CPU, memory, host usage, and email configuration |
+| Log files can grow until they consume disk space | `backup_manager.py` watches selected logs and creates numbered backups at 50 MB and every additional 50 MB |
+| A dashboard can be hard to access safely | The web launcher defaults to localhost and requires an explicit IP plus a firewalld rule for remote local-network access |
+| Testing a security pipeline can affect production logs | The Test action is clearly warned, requires a four-second confirmation delay, runs for only 20 seconds, and can be cancelled |
+| Restarting services requires remembering multiple commands | Dashboard Start, Restart, and Stop controls call the service controller directly |
+
+These features reduce response time, preserve evidence for investigation, make service failures visible,
+and provide a controlled way to verify that detection and blocking are connected.
 
 ---
 
@@ -118,9 +140,33 @@ Two modes available via `bash run.sh view`:
 | Mode | File | Access |
 |---|---|---|
 | Terminal chart | `visualize_threats.py` | Desktop matplotlib window, refreshes every 5s |
-| Web dashboard | `visualize_web.py` | `http://localhost:8080`, auto-refreshes every 5s |
+| Web dashboard | `visualize_web.py` + `templates/dashboard.html` + `static/dashboard.css` | `http://localhost:8080`, live data refreshes every 2s |
 
-Both read from `threat_ip.json` and display bar charts for `brute_force`, `lockout`, `pam_failure`, and `other_failed`.
+The web dashboard has five live panels: attack charts, service/process health, the configured
+`LOG_FILE_PATH`, failed attack logs, and detected/banned IPs. It also reports host CPU and
+memory usage, monitor/firewall PIDs and resource usage, and whether email settings are configured.
+The dashboard reads the latest log lines on each refresh, similar to `tail -f`, and continues to
+show the rest of the interface when an optional output file is unavailable.
+The HTML and CSS are served by Flask, so no separate frontend development server is required.
+Start the browser dashboard with `bash web-working.sh`. It asks whether to expose port 8080
+to one additional local IP; pressing Enter keeps it localhost-only. The dashboard also provides Start, Restart, and Stop controls for the monitored services.
+Run the dashboard with `sudo ./web-working.sh` if those controls need to manage root-owned
+monitoring services.
+The Test button requires explicit confirmation, waits four seconds before enabling Yes, and
+runs the local attack simulator for 20 seconds. The simulator writes fake entries to `auth.log`,
+so it must only be used in a controlled test environment; generated IPs may be banned.
+
+### 💾 Automatic Backups
+
+The service also runs `backup_manager.py`, which checks the configured authentication log and
+project-generated log, JSON, and text outputs every 10 seconds. When a monitored file reaches
+50 MB, it is copied beside the original as `filename.bkup1`; additional backups use the next
+number (`filename.bkup2`, and so on). A new backup is created after each additional 50 MB of
+growth, and the highest suffix is the newest backup.
+
+The backup service starts and stops with the other services through `init.sh`. Its output is
+written to `analysis_output/backup.log`, and its PID is stored in `analysis_output/backup.pid`.
+Backups are copies; the original file is not truncated or deleted.
 
 ---
 
@@ -149,13 +195,18 @@ firewall-cmd rich rule DROP                     alert email sent
   │                                             threat_ip.log + .json cleared
   ▼
 firewall_rules.log  (audit trail)
+       │
+       │  size check every 10s
+       ▼
+backup_manager.py  ────► filename.bkup1, filename.bkup2, ...
 ```
 
-**Two independent background processes run in parallel:**
+**Three independent background processes run in parallel:**
 - `main.py` — reads auth.log, detects threats, writes output files, triggers email
 - `firewall_auto_ip_blocker.py` — watches `ips_detected.txt`, blocks IPs via firewalld
+- `backup_manager.py` — watches selected logs and creates numbered copies at 50 MB boundaries
 
-Both are started by `init.sh` using `nohup`, with PIDs stored in `analysis_output/` for clean shutdown.
+All three are started by `init.sh` using `nohup`, with PIDs stored in `analysis_output/` for clean shutdown.
 
 ---
 
@@ -176,6 +227,11 @@ SSH_log_monitoring-alerting_and_banning_/
 │   ├── firewall-auto-setup.py        ← Firewall setup checker
 │   ├── visualize_threats.py          ← Matplotlib terminal chart
 │   ├── visualize_web.py              ← Flask web dashboard
+│   ├── templates/dashboard.html      ← Dashboard HTML template
+│   ├── static/dashboard.css          ← Dashboard styles
+│   ├── web-working.sh                ← Dashboard launcher and firewall prompt
+│   ├── backup_manager.py             ← 50 MB numbered backup service
+│   ├── attaker.py                    ← Attack simulator used by dashboard Test
 │   ├── init.sh                       ← Service controller (start/stop/restart/status/view/logs)
 │   ├── run.sh                        ← User-friendly wrapper for init.sh
 │   ├── protect-my-ip.sh              ← Whitelist admin IP before blocking
@@ -190,9 +246,16 @@ SSH_log_monitoring-alerting_and_banning_/
     ├── output.log                    ← Detection event log
     ├── main.log                      ← main.py stdout/stderr
     ├── firewall.log                  ← firewall_auto_ip_blocker.py stdout/stderr
+    ├── backup.log                   ← backup_manager.py stdout/stderr
     ├── main.pid                      ← PID of main.py process
-    └── firewall.pid                  ← PID of firewall blocker process
+    ├── firewall.pid                  ← PID of firewall blocker process
+    └── backup.pid                   ← PID of backup manager process
 ```
+
+The detection output files (`threat_ip.log`, `threat_ip.json`, `ips_detected.txt`, and
+`output.log`) are created in the working directory by the Python handlers. Service stdout/stderr
+and PID files are stored under `working/analysis_output/`. The backup manager monitors both
+locations where applicable.
 
 ---
 
@@ -225,7 +288,7 @@ bash run.sh
 **Install dependencies:**
 ```bash
 pip install -r requirements.txt
-# Installs: regex, matplotlib, Flask
+# Installs: regex, matplotlib, Flask, psutil
 ```
 
 **Install firewalld (if missing):**
@@ -272,7 +335,7 @@ An interactive menu appears — no need to remember any command names:
   2)  Stop           — Stop all running services
   3)  Restart        — Restart all services
   4)  Status         — Check if services are running
-  5)  Web Dashboard  — Live threat chart at http://localhost:8080
+  5)  Web Dashboard  — Live security dashboard at http://localhost:8080
   6)  Terminal Chart — Live threat chart in terminal window
   7)  Live Logs      — Stream main service logs (Ctrl+C to exit)
   8)  Firewall Logs  — Stream firewall action logs (Ctrl+C to exit)
@@ -294,6 +357,7 @@ Type a number and press Enter. That's it.
 7. Runs `firewall-auto-setup.py` to verify firewalld is active
 8. Starts `main.py` as a background process (PID saved to `main.pid`)
 9. Starts `firewall_auto_ip_blocker.py` as a background process (PID saved to `firewall.pid`)
+10. Starts `backup_manager.py` as a background process (PID saved to `backup.pid`)
 
 ---
 
@@ -308,6 +372,9 @@ Type a number and press Enter. That's it.
 | `output.log` | Appended log of every pattern match detected |
 | `main.log` | stdout/stderr of main.py |
 | `firewall.log` | stdout/stderr of firewall_auto_ip_blocker.py |
+| `backup.log` | stdout/stderr of backup_manager.py |
+| `analysis_output/*.pid` | Runtime PIDs for the monitor, firewall blocker, and backup manager |
+| `filename.bkupN` | Numbered copy created after each 50 MB backup boundary |
 
 **Sample `threat_ip.json`:**
 ```json
@@ -336,10 +403,24 @@ Opens a matplotlib window with a color-coded bar chart that refreshes every 5 se
 
 **Option 5 — Web dashboard** (headless-friendly):
 ```
-bash run.sh  →  choose 5
-# Open http://localhost:8080 in your browser
+bash web-working.sh
+# Press Enter for localhost-only access
+# Open http://127.0.0.1:8080
 ```
-Serves a PNG bar chart via Flask, auto-refreshing every 5 seconds. Accessible remotely if port 8080 is open.
+Serves the live five-panel dashboard via Flask, refreshing every 2 seconds. Use `y` when prompted
+to allow one selected local IP through firewalld on port 8080. Dashboard Start, Restart, and Stop
+buttons require root privileges; `web-working.sh` requests sudo automatically.
+
+**Dashboard Test action:**
+
+1. Click **Test**.
+2. Read the warning banner; the **Yes** button unlocks after four seconds.
+3. Click **Yes** only in a controlled environment.
+4. The simulator writes fake SSH failures to the configured auth log for 20 seconds, then stops.
+5. Review the dashboard counters, failed logs, banned IP list, and firewall audit log.
+
+The simulator currently included is `working/attaker.py`. The dashboard also supports
+`working/attacker.py` if the file is renamed.
 
 ---
 
@@ -469,7 +550,19 @@ cat analysis_output/firewall.log
 
 **Wrong log file path:**
 - Default is `/var/log/auth.log` (Debian/Ubuntu)
-- For RHEL/CentOS, change `file_name` in `main.py` to `/var/log/secure`
+- For RHEL/CentOS, set `LOG_FILE_PATH=/var/log/secure` in `.env`
+
+**Backups are not appearing:**
+- Confirm the backup service is running: `bash init.sh status`
+- Check `analysis_output/backup.log`
+- Confirm the source file has reached 50 MB or grown by another 50 MB since its last backup
+- Ensure the service has permission to read the source and write beside it
+- Backups use the original file's directory and names such as `auth.log.bkup1`
+
+**Dashboard controls or Test action fail:**
+- Start the dashboard with `sudo ./web-working.sh`
+- Confirm the simulator file is `attaker.py` or `attacker.py`
+- Use the Test action only with a controlled authentication log; it writes fake entries to the configured path
 
 **`firewalld` not found:**
 ```bash
@@ -574,4 +667,4 @@ MIT License — free to use, modify, and distribute.
 > **Author:** Monu Jangra  
 > **GitHub:** [MonuJangra-git](https://github.com/MonuJangra-git)  
 > **LinkedIn:** Monu Jangra  
-> ⭐ Star this project if it helped you!
+> ⭐  Star this project if it helped you! 
