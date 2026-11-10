@@ -174,10 +174,8 @@ Backups are copies; the original file is not truncated or deleted.
 
 Understanding the internal flow helps you debug, extend, or integrate MJ-IPguard into your own stack.
 
-```
 <img width="2640" height="1744" alt="b_at_the_heading_use_M" src="https://github.com/user-attachments/assets/f730ce3c-5ddb-4956-91a7-caa05278b3b1" />
 
-```
 
 **Three independent background processes run in parallel:**
 - `main.py` — reads auth.log, detects threats, writes output files, triggers email
